@@ -1,0 +1,159 @@
+<div class="layui-tab-content">
+    <div class="layui-tab-item layui-show">
+        <form id="app-form" class="layui-form">
+            <div class="layui-form-item">
+                <label class="layui-form-label">赞助方名称</label>
+                <div class="layui-input-inline">
+                    <input type="text" name="support_name" required lay-verify="required" placeholder="0000" autocomplete="off" class="layui-input" value="">
+                </div>
+                <div class="layui-form-mid layui-word-aux">赞助方名称</div>
+            </div>
+            <div class="layui-form-item">
+                <label class="layui-form-label">赞助方logo</label>
+                <div class="layui-input-block layuimini-upload">
+                    <input name="support_logo" type="hidden" class="layui-input layui-col-xs6" lay-verify="required" lay-reqtext="请上传分类图片" placeholder="请上传分类图片" value="">
+                    <div class="layui-input-inline">
+                        <span><a class="layui-btn" data-upload="support_logo" data-upload-number="one" data-upload-exts="*image" data-upload-icon="image"><i class="fa fa-upload"></i> 上传</a></span>
+                    </div>
+                </div>
+<!--                <div class="layui-form-mid layui-word-aux">赞助方logo</div>-->
+            </div>
+            <div class="layui-form-item">
+                <label class="layui-form-label">赞助方客户端下载链接</label>
+                <div class="layui-input-inline">
+                    <input type="text" name="support_link" required lay-verify="required" placeholder="123456789" autocomplete="off" class="layui-input" value="">
+                </div>
+                <div class="layui-form-mid layui-word-aux">赞助方客户端下载链接</div>
+            </div>
+            <div class="layui-form-item">
+                <label class="layui-form-label">比赛日期</label>
+                <div class="layui-input-inline">
+                    <input type="date" name="matic_data" required lay-verify="required" placeholder="123456789" autocomplete="off" class="layui-input" value="">
+                </div>
+                <div class="layui-form-mid layui-word-aux">比赛日期</div>
+            </div>
+            <div class="layui-form-item">
+                <label class="layui-form-label">比赛奖金</label>
+                <div class="layui-input-inline">
+                    <input type="text" name="matic_price" required lay-verify="required" placeholder="123456789" autocomplete="off" class="layui-input" value="">
+                </div>
+                <div class="layui-form-mid layui-word-aux">比赛奖金</div>
+            </div>
+            <div class="layui-form-item">
+                <label class="layui-form-label">直播地址</label>
+                <div class="layui-input-inline">
+                    <input type="text" name="broadcast_link" required lay-verify="required" placeholder="123456789" autocomplete="off" class="layui-input" value="">
+                </div>
+                <div class="layui-form-mid layui-word-aux">直播地址</div>
+            </div>
+            <div class="layui-form-item">
+                <label class="layui-form-label">直播状态</label>
+                <div class="layui-input-inline">
+                    <input type="radio" name="broadcast_statu" value="0" title="未直播" checked>
+                    <input type="radio" name="broadcast_statu" value="1" title="直播中">
+                </div>
+                <div class="layui-form-mid layui-word-aux">直播状态</div>
+            </div>
+            <div class="layui-form-item">
+                <label class="layui-form-label">红方投注总量</label>
+                <div class="layui-input-inline">
+                    <input type="text" name="red_num" required lay-verify="required" placeholder="123456789" autocomplete="off" class="layui-input" value="">
+                </div>
+                <div class="layui-form-mid layui-word-aux">红方投注总量</div>
+            </div>
+            <div class="layui-form-item">
+                <label class="layui-form-label">蓝方投注总量</label>
+                <div class="layui-input-inline">
+                    <input type="text" name="blue_num" required lay-verify="required" placeholder="123456789" autocomplete="off" class="layui-input" value="">
+                </div>
+                <div class="layui-form-mid layui-word-aux">蓝方投注总量</div>
+            </div>
+            <div class="layui-form-item">
+                <label class="layui-form-label">神豪榜奖金</label>
+                <div class="layui-input-inline">
+                    <input type="text" name="shenhao_money" required lay-verify="required" placeholder="123456789" autocomplete="off" class="layui-input" value="">
+                </div>
+                <div class="layui-form-mid layui-word-aux">神豪榜奖金</div>
+            </div>
+            <div class="layui-form-item">
+                <label class="layui-form-label">神豪榜充值数</label>
+                <div class="layui-input-inline">
+                    <input type="text" name="shenhao_price" required lay-verify="required" placeholder="123456789" autocomplete="off" class="layui-input" value="">
+                </div>
+                <div class="layui-form-mid layui-word-aux">神豪榜充值数</div>
+            </div>
+            <div class="layui-form-item">
+                <label class="layui-form-label">神豪榜用户名字</label>
+                <div class="layui-input-inline">
+                    <input type="text" name="shenhao_user_name" required lay-verify="required" placeholder="123456789" autocomplete="off" class="layui-input" value="">
+                </div>
+                <div class="layui-form-mid layui-word-aux">神豪榜用户名字</div>
+            </div>
+            <div class="layui-form-item">
+                <label class="layui-form-label">pk王奖金</label>
+                <div class="layui-input-inline">
+                    <input type="text" name="pk_money" required lay-verify="required" placeholder="123456789" autocomplete="off" class="layui-input" value="">
+                </div>
+                <div class="layui-form-mid layui-word-aux">pk王奖金</div>
+            </div>
+            <div class="layui-form-item">
+                <label class="layui-form-label">pk王击杀数</label>
+                <div class="layui-input-inline">
+                    <input type="text" name="pk_kill" required lay-verify="required" placeholder="123456789" autocomplete="off" class="layui-input" value="">
+                </div>
+                <div class="layui-form-mid layui-word-aux">pk王击杀数</div>
+            </div>
+            <div class="layui-form-item">
+                <label class="layui-form-label">pk王用户名字</label>
+                <div class="layui-input-inline">
+                    <input type="text" name="pk_user_name" required lay-verify="required" placeholder="123456789" autocomplete="off" class="layui-input" value="">
+                </div>
+                <div class="layui-form-mid layui-word-aux">pk王用户名字</div>
+            </div>
+            <div class="layui-form-item">
+                <label class="layui-form-label">手气王奖金</label>
+                <div class="layui-input-inline">
+                    <input type="text" name="king_money" required lay-verify="required" placeholder="123456789" autocomplete="off" class="layui-input" value="">
+                </div>
+                <div class="layui-form-mid layui-word-aux">手气王奖金</div>
+            </div>
+            <div class="layui-form-item">
+                <label class="layui-form-label">手气王中奖数</label>
+                <div class="layui-input-inline">
+                    <input type="text" name="king_num" required lay-verify="required" placeholder="123456789" autocomplete="off" class="layui-input" value="">
+                </div>
+                <div class="layui-form-mid layui-word-aux">手气王中奖数</div>
+            </div>
+            <div class="layui-form-item">
+                <label class="layui-form-label">手气王用户名字</label>
+                <div class="layui-input-inline">
+                    <input type="text" name="king_user_name" required lay-verify="required" placeholder="123456789" autocomplete="off" class="layui-input" value="">
+                </div>
+                <div class="layui-form-mid layui-word-aux">手气王用户名字</div>
+            </div>
+            <div class="layui-form-item">
+                <label class="layui-form-label">投注状态</label>
+                <div class="layui-input-inline">
+                    <input type="radio" name="rank_statu" value="0" title="开始" checked>
+                    <input type="radio" name="rank_statu" value="1" title="关闭">
+                </div>
+                <div class="layui-form-mid layui-word-aux">榜单是否统计完毕</div>
+            </div>
+            <div class="layui-form-item">
+                <label class="layui-form-label">比赛状态</label>
+                <div class="layui-input-inline">
+                    <input type="radio" name="match_statu" value="0" title="未开始" checked>
+                    <input type="radio" name="match_statu" value="1" title="比赛中">
+                    <input type="radio" name="match_statu" value="2" title="已完毕">
+                </div>
+                <div class="layui-form-mid layui-word-aux">比赛状态</div>
+            </div>
+            <div class="layui-form-item">
+                <div class="layui-input-block">
+                    <button class="layui-btn" lay-submit lay-filter="formDemo">立即提交</button>
+                    <button type="reset" class="layui-btn layui-btn-primary">重置</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>

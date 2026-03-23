@@ -1,0 +1,215 @@
+<div class="layui-tab-content">
+    <div class="layui-tab-item layui-show">
+        <form id="app-form" class="layui-form layuimini-form">
+            <input type="hidden" name="name" value="{$operation.name}">
+            <div class="layui-form-item">
+                <label class="layui-form-label">邀请收益（一级）：</label>
+                <div class="layui-input-inline">
+                    <input type="text" name="sharUserMoney1" required lay-verify="required" placeholder="0" autocomplete="off" class="layui-input" value="{$operation.sharUserMoney1}">
+                </div>
+                <div class="layui-form-mid layui-word-aux">被邀请的用户注册时给分享者的收益</div>
+            </div>
+            <div class="layui-form-item">
+                <label class="layui-form-label">邀请收益（二级）：</label>
+                <div class="layui-input-inline">
+                    <input type="text" name="sharUserMoney2" required lay-verify="required" placeholder="0" autocomplete="off" class="layui-input" value="{$operation.sharUserMoney2}">
+                </div>
+                <div class="layui-form-mid layui-word-aux">被邀请的用户注册时给分享者上级的收益</div>
+            </div>
+            <div class="layui-form-item">
+                <label class="layui-form-label">邀请收益比例（一级）：</label>
+                <div class="layui-input-inline">
+                    <input type="text" name="sharUserPercentage1" required lay-verify="required" placeholder="0" autocomplete="off" class="layui-input" value="{$operation.sharUserPercentage1}">
+                </div>
+                <div class="layui-form-mid layui-word-aux">被邀请的用户获得金币时给分享者的收益比例</div>
+            </div>
+            <div class="layui-form-item">
+                <label class="layui-form-label">邀请收益比例（二级）：</label>
+                <div class="layui-input-inline">
+                    <input type="text" name="sharUserPercentage2" required lay-verify="required" placeholder="0" autocomplete="off" class="layui-input" value="{$operation.sharUserPercentage2}">
+                </div>
+                <div class="layui-form-mid layui-word-aux">二级关联的被邀请的用户注册时给分享者的上级收益比例</div>
+            </div>
+            <div class="layui-form-item">
+                <label class="layui-form-label">注册立得金币</label>
+                <div class="layui-input-inline">
+                    <input type="text" name="registerCoin" required lay-verify="required" placeholder="0" autocomplete="off" class="layui-input" value="{$operation.registerCoin}">
+                </div>
+                <div class="layui-form-mid layui-word-aux">如果注册时给金币，则设置对应值，不需要则设置为0</div>
+            </div>
+            <div class="layui-form-item">
+                <label class="layui-form-label">签到金币</label>
+                <div class="layui-input-inline">
+                    <input type="text" name="signlnCoin" required lay-verify="required" placeholder="0" autocomplete="off" class="layui-input" value="{$operation.signlnCoin}">
+                </div>
+                <div class="layui-form-mid layui-word-aux">签到时可获得的金币数</div>
+            </div>
+            <div class="layui-form-item">
+                <label class="layui-form-label">签到3天额外金币</label>
+                <div class="layui-input-inline">
+                    <input type="text" name="signlnCoin3" required lay-verify="required" placeholder="0" autocomplete="off" class="layui-input" value="{$operation.signlnCoin3}">
+                </div>
+                <div class="layui-form-mid layui-word-aux">当月累计3天可获得的金币数</div>
+            </div>
+            <div class="layui-form-item">
+                <label class="layui-form-label">签到7天额外金币</label>
+                <div class="layui-input-inline">
+                    <input type="text" name="signlnCoin7" required lay-verify="required" placeholder="0" autocomplete="off" class="layui-input" value="{$operation.signlnCoin7}">
+                </div>
+                <div class="layui-form-mid layui-word-aux">当月累计签到7天可获得的金币数</div>
+            </div>
+            <div class="layui-form-item">
+                <label class="layui-form-label">签到14天额外金币</label>
+                <div class="layui-input-inline">
+                    <input type="text" name="signlnCoin14" required lay-verify="required" placeholder="0" autocomplete="off" class="layui-input" value="{$operation.signlnCoin14}">
+                </div>
+                <div class="layui-form-mid layui-word-aux">当月累计签到14天可获得的金币数</div>
+            </div>
+            <div class="layui-form-item">
+                <label class="layui-form-label">签到两次14天额外金币</label>
+                <div class="layui-input-inline">
+                    <input type="text" name="signlnCoin28" required lay-verify="required" placeholder="0" autocomplete="off" class="layui-input" value="{$operation.signlnCoin28}">
+                </div>
+                <div class="layui-form-mid layui-word-aux">当月累计签到两次14天可获得的金币数</div>
+            </div>
+            <div class="layui-form-item">
+                <label class="layui-form-label">绑定手机实名得金币</label>
+                <div class="layui-input-inline">
+                    <input type="text" name="mainCoin" required lay-verify="required" placeholder="0" autocomplete="off" class="layui-input" value="{$operation.mainCoin}">
+                </div>
+                <div class="layui-form-mid layui-word-aux">绑定手机号或实名认证得金币，如果手机号注册直接得金币</div>
+            </div>
+            <div class="layui-form-item">
+                <label class="layui-form-label">发帖回帖金币</label>
+                <div class="layui-input-inline">
+                    <input type="text" name="postCoin" required lay-verify="required" placeholder="0" autocomplete="off" class="layui-input" value="{$operation.postCoin}">
+                </div>
+                <div class="layui-form-mid layui-word-aux">发帖获得得金币数</div>
+            </div>
+            <div class="layui-form-item">
+                <label class="layui-form-label">发帖回帖得金币次数</label>
+                <div class="layui-input-inline">
+                    <input type="text" name="postNumber" required lay-verify="required" placeholder="0" autocomplete="off" class="layui-input" value="{$operation.postNumber}">
+                </div>
+                <div class="layui-form-mid layui-word-aux">每天发帖回帖多少次内可以得金币</div>
+            </div>
+            <div class="layui-form-item">
+                <label class="layui-form-label">浏览游戏得金币</label>
+                <div class="layui-input-inline">
+                    <input type="text" name="lookGame" required lay-verify="required" placeholder="0" autocomplete="off" class="layui-input" value="{$operation.lookGame}">
+                </div>
+                <div class="layui-form-mid layui-word-aux">每天浏览游戏得金币数</div>
+            </div>
+            <div class="layui-form-item">
+                <label class="layui-form-label">浏览不同游戏次数</label>
+                <div class="layui-input-inline">
+                    <input type="text" name="lookGameNumber" required lay-verify="required" placeholder="0" autocomplete="off" class="layui-input" value="{$operation.lookGameNumber}">
+                </div>
+                <div class="layui-form-mid layui-word-aux">每天浏览不同游戏多少次可以得金币</div>
+            </div>
+            <div class="layui-form-item">
+                <label class="layui-form-label">白银宝箱金币</label>
+                <div class="layui-input-inline">
+                    <input type="text" name="boxCoin30" required lay-verify="required" placeholder="0-20" autocomplete="off" class="layui-input" value="{$operation.boxCoin30}">
+                </div>
+                <div class="layui-form-mid layui-word-aux">白银宝箱可获得金币区间</div>
+            </div>
+            <div class="layui-form-item">
+                <label class="layui-form-label">黄静宝箱金币</label>
+                <div class="layui-input-inline">
+                    <input type="text" name="boxCoin60" required lay-verify="required" placeholder="10-20" autocomplete="off" class="layui-input" value="{$operation.boxCoin60}">
+                </div>
+                <div class="layui-form-mid layui-word-aux">黄金宝箱可获得金币区间</div>
+            </div>
+            <div class="layui-form-item">
+                <label class="layui-form-label">铂金宝箱金币</label>
+                <div class="layui-input-inline">
+                    <input type="text" name="boxCoin120" required lay-verify="required" placeholder="10-20" autocomplete="off" class="layui-input" value="{$operation.boxCoin120}">
+                </div>
+                <div class="layui-form-mid layui-word-aux">铂金宝箱可获得金币区间</div>
+            </div>
+            <div class="layui-form-item">
+                <label class="layui-form-label">钻石宝箱金币</label>
+                <div class="layui-input-inline">
+                    <input type="text" name="boxCoin240" required lay-verify="required" placeholder="10-20" autocomplete="off" class="layui-input" value="{$operation.boxCoin240}">
+                </div>
+                <div class="layui-form-mid layui-word-aux">钻石宝箱可获得金币区间</div>
+            </div>
+            <div class="layui-form-item">
+                <label class="layui-form-label">金币抽奖转盘消耗</label>
+                <div class="layui-input-inline">
+                    <input type="text" name="luckCoinConsume" required lay-verify="required" placeholder="0" autocomplete="off" class="layui-input" value="{$operation.luckCoinConsume}">
+                </div>
+                <div class="layui-form-mid layui-word-aux">每一局金币转盘消耗多少金币</div>
+            </div>
+            <div class="layui-form-item">
+                <label class="layui-form-label">实物抽奖转盘消耗</label>
+                <div class="layui-input-inline">
+                    <input type="text" name="luckPrizeCoinConsume" required lay-verify="required" placeholder="0" autocomplete="off" class="layui-input" value="{$operation.luckPrizeCoinConsume}">
+                </div>
+                <div class="layui-form-mid layui-word-aux">每一局实物转盘消耗多少金币</div>
+            </div>
+            <div class="layui-form-item">
+                <label class="layui-form-label">金币兑换余额比例</label>
+                <div class="layui-input-inline">
+                    <input type="text" name="coinToMoney" required lay-verify="required" placeholder="0" autocomplete="off" class="layui-input" value="{$operation.coinToMoney}">
+                </div>
+                <div class="layui-form-mid layui-word-aux">金币兑换余额比例，例如200，则200个金币可兑换1元余额</div>
+            </div>
+            <div class="layui-form-item">
+                <label class="layui-form-label">每日盲盒金币数量</label>
+                <div class="layui-input-inline">
+                    <input type="text" name="luck" required lay-verify="required" placeholder="10-20" autocomplete="off" class="layui-input" value="{$operation.luck}">
+                </div>
+                <div class="layui-form-mid layui-word-aux">每日盲盒金币数量</div>
+            </div>
+            <div class="layui-form-item">
+                <label class="layui-form-label">任务一</label>
+                <div class="layui-input-inline">
+                    <input type="text" name="renwu1" required lay-verify="required" placeholder="10-20" autocomplete="off" class="layui-input" value="{$operation.renwu1}">
+                </div>
+                <div class="layui-form-mid layui-word-aux">特色好服任务一奖励</div>
+            </div>
+            <div class="layui-form-item">
+                <label class="layui-form-label">任务二</label>
+                <div class="layui-input-inline">
+                    <input type="text" name="renwu2" required lay-verify="required" placeholder="10-20" autocomplete="off" class="layui-input" value="{$operation.renwu2}">
+                </div>
+                <div class="layui-form-mid layui-word-aux">特色好服任务二奖励</div>
+            </div>
+            <div class="layui-form-item">
+                <label class="layui-form-label">任务三</label>
+                <div class="layui-input-inline">
+                    <input type="text" name="renwu3" required lay-verify="required" placeholder="10-20" autocomplete="off" class="layui-input" value="{$operation.renwu3}">
+                </div>
+                <div class="layui-form-mid layui-word-aux">特色好服任务三奖励</div>
+            </div>
+            <div class="layui-form-item">
+                <label class="layui-form-label">扣除数量</label>
+                <div class="layui-input-inline">
+                    <input type="text" name="reduce" required lay-verify="required" placeholder="10-20" autocomplete="off" class="layui-input" value="{$operation.reduce}">
+                </div>
+                <div class="layui-form-mid layui-word-aux">发布每条广告每天扣的点数</div>
+            </div>
+            <div class="layui-form-item">
+                <label class="layui-form-label">列表模式</label>
+                <div class="layui-input-inline">
+                    {if condition="$operation.list_statu==0"}
+                    <input type="radio" name="list_statu" value="0" title="图文列表" checked>
+                    <input type="radio" name="list_statu" value="1" title="文字列表">
+                    {else /}
+                    <input type="radio" name="list_statu" value="0" title="图文列表">
+                    <input type="radio" name="list_statu" value="1" title="文字列表" checked>
+                    {/if}
+                </div>
+                <div class="layui-form-mid layui-word-aux">特色好服游戏列表模式</div>
+            </div>
+            <div class="layui-form-item">
+                <div class="layui-input-block">
+                    <button class="layui-btn" lay-submit lay-filter="formDemo">立即保存</button>
+                    <button type="reset" class="layui-btn layui-btn-primary">重置</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>

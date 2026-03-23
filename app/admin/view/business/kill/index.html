@@ -1,0 +1,60 @@
+<div class="layui-tab-content">
+    <div class="layui-tab-item layui-show">
+        <form id="app-form" class="layui-form layuimini-form">
+
+            <div class="layui-form-item">
+                <label class="layui-form-label required">每次消耗金币</label>
+                <div class="layui-input-inline">
+                    <input type="number" name="consume_coin" min="0" lay-verify="required" class="layui-input" value="{$row.consume_coin|default='0'}">
+                </div>
+                <div class="layui-form-mid layui-word-aux">点击一次开始按钮消耗的金币数量</div>
+            </div>
+
+            <div class="layui-form-item">
+                <label class="layui-form-label">开始按钮图片</label>
+                <div class="layui-input-block layuimini-upload">
+                    <input name="start_btn_image" type="hidden" class="layui-input layui-col-xs6" value="{$row.start_btn_image|default=''}">
+                    <div class="layui-input-inline">
+                        <span><a class="layui-btn" data-upload="start_btn_image" data-upload-number="one" data-upload-exts="*image" data-upload-icon="image"><i class="fa fa-upload"></i> 上传</a></span>
+                        <span><a class="layui-btn layui-btn-normal" id="select_start_btn_image" data-upload-select="start_btn_image" data-upload-number="one" data-upload-mimetype="image/*"><i class="fa fa-list"></i> 选择</a></span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="layui-form-item">
+                <label class="layui-form-label">开始按钮背景</label>
+                <div class="layui-input-block layuimini-upload">
+                    <input name="start_btn_bg" type="hidden" class="layui-input layui-col-xs6" value="{$row.start_btn_bg|default=''}">
+                    <div class="layui-input-inline">
+                        <span><a class="layui-btn" data-upload="start_btn_bg" data-upload-number="one" data-upload-exts="*image" data-upload-icon="image"><i class="fa fa-upload"></i> 上传</a></span>
+                        <span><a class="layui-btn layui-btn-normal" id="select_start_btn_bg" data-upload-select="start_btn_bg" data-upload-number="one" data-upload-mimetype="image/*"><i class="fa fa-list"></i> 选择</a></span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="layui-form-item">
+                <label class="layui-form-label">怪物背景</label>
+                <div class="layui-input-block layuimini-upload">
+                    <input name="monster_bg" type="hidden" class="layui-input layui-col-xs6" value="{$row.monster_bg|default=''}">
+                    <div class="layui-input-inline">
+                        <span><a class="layui-btn" data-upload="monster_bg" data-upload-number="one" data-upload-exts="*image" data-upload-icon="image"><i class="fa fa-upload"></i> 上传</a></span>
+                        <span><a class="layui-btn layui-btn-normal" id="select_monster_bg" data-upload-select="monster_bg" data-upload-number="one" data-upload-mimetype="image/*"><i class="fa fa-list"></i> 选择</a></span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="layui-form-item">
+                <label class="layui-form-label">数据库配置</label>
+                <div class="layui-input-block">
+                    <a class="layui-btn layui-btn-sm" data-open="{:url('business.kill/open_gwlist')}" data-title="配置怪物数据库" data-full="true">配置怪物数据库</a>
+                    <a class="layui-btn layui-btn-warm layui-btn-sm" data-open="{:url('business.kill/open_wplist')}" data-title="配置物品数据库" data-full="true">配置物品数据库</a>
+                </div>
+            </div>
+
+            <div class="layui-form-item text-center">
+                <button type="submit" class="layui-btn layui-btn-normal layui-btn-sm" lay-submit>保存配置</button>
+            </div>
+
+        </form>
+    </div>
+</div>

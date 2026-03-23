@@ -1,0 +1,41 @@
+<div class="layui-tab-content">
+    <div class="layui-tab-item layui-show">
+        <form id="app-form" class="layui-form layuimini-form">
+
+            <div class="layui-form-item">
+                <label class="layui-form-label">当前等级</label>
+                <div class="layui-input-block">
+                    <input type="text" class="layui-input" value="{$level.level_name}" disabled>
+                </div>
+            </div>
+
+            <div class="layui-form-item">
+                <label class="layui-form-label">默认概率</label>
+                <div class="layui-input-inline">
+                    <input type="number" name="default_probability" min="0" lay-verify="required" class="layui-input" value="0">
+                </div>
+                <div class="layui-form-mid layui-word-aux">批量添加时先给一个默认概率，添加后可在列表中逐个修改</div>
+            </div>
+
+            <div class="layui-form-item">
+                <label class="layui-form-label">选择怪物</label>
+                <div class="layui-input-block">
+                    <div
+                        data-toggle="table-data"
+                        data-index="{:url('business.kill/open_gwlist')}"
+                        data-select-type="checkbox"
+                        data-select-value=""
+                        data-value-field="id"
+                        data-name="gw_ids"
+                        data-field-name="title">
+                    </div>
+                </div>
+            </div>
+
+            <div class="layui-form-item text-center">
+                <button type="submit" class="layui-btn layui-btn-normal layui-btn-sm" lay-submit>确认</button>
+                <button type="reset" class="layui-btn layui-btn-primary layui-btn-sm">重置</button>
+            </div>
+        </form>
+    </div>
+</div>

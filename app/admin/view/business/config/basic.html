@@ -1,0 +1,55 @@
+<div class="layui-tab-content">
+  <div class="layui-tab-item layui-show">
+    <form id="app-form" class="layui-form layuimini-form">
+      <input type="hidden" name="name" value="{$basic.name}">
+      <div class="layui-form-item">
+        <label class="layui-form-label required">沙巴克banner图</label>
+        <div class="layui-input-block layuimini-upload">
+          <input name="sbkBanner" type="hidden" class="layui-input layui-col-xs6" lay-verify="required" lay-reqtext="请上传分类图片" placeholder="请上传分类图片" value="{$basic.sbkBanner|default=''}">
+          <div class="layui-input-inline">
+            <span><a class="layui-btn" data-upload="sbkBanner" data-upload-number="one" data-upload-exts="*image" data-upload-icon="image"><i class="fa fa-upload"></i> 上传</a></span>
+          </div>
+        </div>
+<!--        <div class="layui-form-mid layui-word-aux">banner图，建议尺寸为。。。</div>-->
+      </div>
+      <div class="layui-form-item">
+        <label class="layui-form-label">QQ客服</label>
+        <div class="layui-input-inline">
+          <input type="text" name="qq" required lay-verify="required" placeholder="123456789" autocomplete="off" class="layui-input" value="{$basic.qq}">
+        </div>
+        <div class="layui-form-mid layui-word-aux">QQ客服的QQ号码</div>
+      </div>
+      <div class="layui-form-item">
+        <label class="layui-form-label">微信客服图片</label>
+        <div class="layui-input-block layuimini-upload">
+          <input name="wechatQf" type="hidden" class="layui-input layui-col-xs6" lay-verify="required" lay-reqtext="请上传分类图片" placeholder="请上传分类图片" value="{$basic.wechatQf|default=''}">
+          <div class="layui-input-inline">
+            <span><a class="layui-btn" data-upload="wechatQf" data-upload-number="one" data-upload-exts="*image" data-upload-icon="image"><i class="fa fa-upload"></i> 上传</a></span>
+          </div>
+        </div>
+<!--        <div class="layui-form-mid layui-word-aux">微信客服二维码，一般与QQ客服一起展示</div>-->
+      </div>
+      <div class="layui-form-item">
+        <label class="layui-form-label">默认头像</label>
+        <div class="layui-input-block layuimini-upload">
+          <input name="avatar" type="hidden" class="layui-input layui-col-xs6" lay-verify="required" lay-reqtext="请上传默认头像" placeholder="请上传分类图片" value="{$basic.avatar|default=''}">
+          <div class="layui-input-inline">
+            <span><a class="layui-btn" data-upload="avatar" data-upload-number="one" data-upload-exts="*image" data-upload-icon="image"><i class="fa fa-upload"></i> 上传</a></span>
+          </div>
+        </div>
+        <!--        <div class="layui-form-mid layui-word-aux">微信客服二维码，一般与QQ客服一起展示</div>-->
+      </div>
+      <div class="layui-form-item">
+        <label class="layui-form-label">内嵌地址</label>
+        <div class="layui-input-inline">
+          <input type="text" name="yx_url" required lay-verify="required" placeholder="123456789" autocomplete="off" class="layui-input" value="{$basic.yx_url}">
+        </div>
+        <div class="layui-form-mid layui-word-aux">盒子内嵌地址</div>
+      </div>
+      <div class="layui-form-item text-center">
+        <button type="submit" class="layui-btn layui-btn-normal layui-btn-sm" lay-submit>确认</button>
+        <button type="reset" class="layui-btn layui-btn-primary layui-btn-sm">重置</button>
+      </div>
+    </form>
+  </div>
+</div>

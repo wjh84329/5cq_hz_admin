@@ -1,0 +1,70 @@
+<div class="layui-tab-content">
+    <div class="layui-tab-item layui-show">
+        <form id="app-form" class="layui-form">
+            <div class="layui-form-item" style="display: flex;align-items: center">
+                <label class="layui-form-label">广告内容</label>
+                <div class="layui-input-block" style="display: flex;align-items: center;margin-left: initial">
+                    <div style="width: 500px">
+<!--                        <span style="width: 100%">可以一次发布多条广告，多条信息请用空行隔开。</span>-->
+                        <textarea style="width: 100%" required lay-verify="required" name="text" rows="20" class="layui-textarea" placeholder="请填写广告内容,格式请参考右侧"></textarea>
+                    </div>
+                    <div class="" style="padding-left: 5%;width: 500px">
+                        <div>服务器名：玩█神器专属沉默</div>
+                        <div>服务器IP：来奇龙█就对了</div>
+                        <div>开区时间：2024-07-24 全天套黄</div>
+                        <div>线路类别：◆◆嘎嘎吃肉◆</div>
+                        <div>客服QQ号：〝０茺嫖终极〞</div>
+                        <div>版本介绍：◆◆万元首爆◆会员通关◆散人追梦◆◆</div>
+                        <div>主页地址：http://www.5cq.com</div>
+                        <div>列表地址：tcp:xxx.xxx.xxx.xxx:80=8.txt</div>
+                        <div>下载地址：http://www.5cq.com</div>
+                    </div>
+                </div>
+            </div>
+            <div class="layui-form-item">
+                <label class="layui-form-label">M2类型</label>
+                <div class="layui-input-inline">
+                    <select name="engine" lay-verify="required">
+                        <option value="gee">gee</option>
+                        <option value="low_gom">low_gom</option>
+                        <option value="new_gom">new_gom</option>
+                        <option value="gxx">gxx</option>
+                    </select>
+                </div>
+                <div class="layui-form-mid layui-word-aux">M2类型</div>
+            </div>
+            <div class="layui-form-item">
+                <label class="layui-form-label">广告类型</label>
+                <div class="layui-input-inline" style="width: 15%">
+                    <input type="radio" name="show" value="0" title="精品推荐" checked>
+                    <input type="radio" name="show" value="1" title="置顶推荐">
+                </div>
+                <div class="layui-form-mid layui-word-aux">广告为随机排序，置顶推荐显示在最上面</div>
+            </div>
+            <div class="layui-form-item">
+                <label class="layui-form-label">开始时间</label>
+                <div class="layui-input-block" style="display: flex;align-items: center">
+                    <input type="text" name="opendata" id="opendata" readonly style="width: 20%" autocomplete="off" class="layui-input" value="自动获取开区时间">
+                    <button id="sz" type="button" class="layui-btn" style="width: 10%">设置为明天0点</button>
+                    <span style="width: 5%;margin-left: 1%;margin-right: 1%">广告天数:</span>
+                    <input style="width: 5%" type="text" name="days" required lay-verify="required" placeholder="请输入天数" autocomplete="off" class="layui-input" value="7">
+                    <span>天</span>
+                    <div class="layui-form-mid layui-word-aux" style="margin-left: 2%">广告开始显示的时间，显示一天就是显示到明天这个时间</div>
+                </div>
+            </div>
+            <div class="layui-form-item">
+                <label class="layui-form-label">发布条数</label>
+                <div class="layui-input-inline">
+                    <input type="number" name="num" required lay-verify="required" placeholder="请输入发布条数" autocomplete="off" class="layui-input" value="1">
+                </div>
+                <div class="layui-form-mid layui-word-aux">多条连体</div>
+            </div>
+            <div class="layui-form-item">
+                <div class="layui-input-block">
+                    <button class="layui-btn" lay-submit lay-filter="formDemo">立即提交</button>
+                    <button type="reset" class="layui-btn layui-btn-primary">重置</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>

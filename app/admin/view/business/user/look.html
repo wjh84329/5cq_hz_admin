@@ -1,0 +1,76 @@
+<input type="hidden" id="openid" value="{$userinfo.open_id}">
+<div class="layui-tab-content">
+    <div class="layui-tab-item layui-show">
+        <fieldset class="layui-elem-field">
+            <legend>用户 - {$userinfo.name}</legend>
+            <div class="layui-field-box">
+                <div class="layui-row layui-col-space15">
+                    <div class="layui-col-md6">
+                        <div class="layui-card">
+                            <div class="layui-card-header">基本信息</div>
+                            <div class="layui-card-body">
+                                <div>用户ID：{$userinfo.id}</div>
+                                <div>openid：{$userinfo.open_id}</div>
+                                <div>真实姓名：{$userinfo.realname|default='未实名'}</div>
+                                <div>手机号：{$userinfo.phone|default='未绑定'}</div>
+                                <div>当前金币：{$userinfo.coin_num}</div>
+                                <div>当前余额：{$userinfo.money}</div>
+                                <div>当前等级：{$userinfo.lv}</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="layui-col-md6">
+                        <div class="layui-card">
+                            <div class="layui-card-header">充值信息</div>
+                            <div class="layui-card-body">
+                                <div>总计获得金币：{$coinAddTotal}</div>
+                                <div>总计金币兑换次数：{$coinCzCount}</div>
+                                <div>总计充值总金额：{$coinCzTotal}</div>
+                                <div>总计充值累计消耗金币数：{$coinCzCoin}</div>
+                                <div>累计充值次数：{$Czcount}</div>
+                                <div>累计充值成功次数：{$CzCgCount}</div>
+                                <div>累计充值成功金额：{$CzCgMoney}</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </fieldset>
+    </div>
+</div>
+<table id="demo" lay-filter="test"></table>
+<script>
+    layui.use('table', function(){
+        var $ = layui.jquery;
+        var table = layui.table;
+
+        var open_id = $('#openid').val()
+
+        //第一个实例
+        table.render({
+            elem: '#demo'
+            ,url: '{:url("/admin/business.yxcz/getData")}' //数据接口
+            ,page: true //开启分页
+            ,where: {
+                open_id:open_id
+            }
+            ,cols: [[ //表头
+                {field: 'coin_num', title: '金币'}
+                ,{field: 'fs', title: '途径'}
+                ,{field: 'code', title: '收支',
+                        templet: function (obj) {
+                            if (obj.code == 1) {
+                                return `<span style="color: red">支出</span>`;
+                            }else if (obj.code == 0) {
+                                return `<span style="color: deepskyblue">收入</span>`;
+                            }else {
+                                return ''
+                            }
+                        }
+                }
+                ,{field: 'updata_time', title: '时间'}
+            ]],
+        });
+
+    });
+</script>

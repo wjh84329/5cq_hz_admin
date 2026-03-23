@@ -1,0 +1,139 @@
+<div class="layui-tab-content">
+    <div class="layui-tab-item layui-show">
+        <form id="app-form" class="layui-form">
+            <!--<input type="hidden" name="id" value="{$list.id}">-->
+            <div class="layui-form-item">
+                <label class="layui-form-label">服务器名</label>
+                <div class="layui-input-inline">
+                    <input type="text" name="serverName" required lay-verify="required" placeholder="请输入服务器名" autocomplete="off" class="layui-input" value="{$list.serverName}">
+                </div>
+                <div class="layui-form-mid layui-word-aux">服务器名</div>
+            </div>
+            <div class="layui-form-item">
+                <label class="layui-form-label">服务器IP</label>
+                <div class="layui-input-inline">
+                    <input type="text" name="serverIp" required lay-verify="required" placeholder="请输入服务器IP" autocomplete="off" class="layui-input" value="{$list.serverIp}">
+                </div>
+                <div class="layui-form-mid layui-word-aux">服务器IP</div>
+            </div>
+            <div class="layui-form-item">
+                <label class="layui-form-label">开区时间</label>
+                <div class="layui-input-inline">
+                    <input type="text" name="openTime" required lay-verify="required" placeholder="请输入开区时间" autocomplete="off" class="layui-input" value="{$list.openTime}">
+                </div>
+                <div class="layui-form-mid layui-word-aux">开区时间</div>
+            </div>
+            <div class="layui-form-item">
+                <label class="layui-form-label">客服QQ</label>
+                <div class="layui-input-inline">
+                    <input type="text" name="QQ" required lay-verify="required" placeholder="请输入客服QQ" autocomplete="off" class="layui-input" value="{$list.QQ}">
+                </div>
+                <div class="layui-form-mid layui-word-aux">客服QQ</div>
+            </div>
+            <div class="layui-form-item">
+                <label class="layui-form-label">线路类别</label>
+                <div class="layui-input-inline">
+                    <input type="text" name="route" required lay-verify="required" placeholder="请输入线路类别" autocomplete="off" class="layui-input" value="{$list.route}">
+                </div>
+                <div class="layui-form-mid layui-word-aux">线路类别</div>
+            </div>
+            <div class="layui-form-item">
+                <label class="layui-form-label">版本介绍</label>
+                <div class="layui-input-inline">
+                    <input type="text" name="version" required lay-verify="required" placeholder="请输入版本介绍" autocomplete="off" class="layui-input" value="{$list.version}">
+                </div>
+                <div class="layui-form-mid layui-word-aux">版本介绍</div>
+            </div>
+            <div class="layui-form-item">
+                <label class="layui-form-label">主页地址</label>
+                <div class="layui-input-inline">
+                    <input type="text" name="homeUrl" required lay-verify="required" placeholder="请输入主页地址" autocomplete="off" class="layui-input" value="{$list.homeUrl}">
+                </div>
+                <div class="layui-form-mid layui-word-aux">主页地址</div>
+            </div>
+            <div class="layui-form-item">
+                <label class="layui-form-label">列表地址</label>
+                <div class="layui-input-inline">
+                    <input type="text" name="listUrl" placeholder="请输入列表地址" autocomplete="off" class="layui-input" value="{$list.listUrl}">
+                </div>
+                <div class="layui-form-mid layui-word-aux">列表地址</div>
+            </div>
+            <div class="layui-form-item">
+                <label class="layui-form-label">下载地址</label>
+                <div class="layui-input-inline">
+                    <input type="text" name="downUrl" placeholder="请输入下载地址" autocomplete="off" class="layui-input" value="{$list.downUrl}">
+                </div>
+                <div class="layui-form-mid layui-word-aux">下载地址</div>
+            </div>
+            <div class="layui-form-item">
+                <label class="layui-form-label">M2类型</label>
+                <div class="layui-input-inline">
+                    <select name="engine" lay-verify="required">
+                        <option value="gee" {$list.engine=='gee'?'selected':''}>gee</option>
+                        <option value="low_gom" {$list.engine=='low_gom'?'selected':''}>low_gom</option>
+                        <option value="new_gom" {$list.engine=='new_gom'?'selected':''}>new_gom</option>
+                        <option value="gxx" {$list.engine=='gxx'?'selected':''}>gxx</option>
+                    </select>
+                </div>
+                <div class="layui-form-mid layui-word-aux">M2类型</div>
+            </div>
+            <div class="layui-form-item">
+                <label class="layui-form-label">广告类型</label>
+                <div class="layui-input-inline" style="width: 30%">
+                    <input type="radio" name="show" value="0" title="精品推荐" {$list.show=='0'?'checked':''}>
+                    <input type="radio" name="show" value="1" title="置顶推荐" {$list.show=='1'?'checked':''}>
+                </div>
+                <div class="layui-form-mid layui-word-aux">广告为随机排序，置顶推荐显示在最上面</div>
+            </div>
+            <div class="layui-form-item">
+                <label class="layui-form-label">开始时间</label>
+                <div class="layui-input-inline">
+                    <input type="text" name="startTime" required lay-verify="required" readonly placeholder="请选择开始时间" autocomplete="off" class="layui-input" value="{$list.startTime}">
+                </div>
+                <div class="layui-form-mid layui-word-aux">广告开始显示的时间，显示一天就是显示到明天这个时间</div>
+            </div>
+            <div class="layui-form-item">
+                <label class="layui-form-label">结束时间</label>
+                <div class="layui-input-inline">
+                    <input type="text" name="expiresTime" required lay-verify="required" readonly placeholder="请选择结束时间" autocomplete="off" class="layui-input" value="{$list.expiresTime}">
+                </div>
+                <div class="layui-form-mid layui-word-aux">广告开始显示的时间，显示一天就是显示到明天这个时间</div>
+            </div>
+            <div class="layui-form-item">
+                <label class="layui-form-label">调整时间</label>
+                <div class="layui-input-block" style="display: flex;align-items: center">
+                    <select name="add" lay-verify="required" style="width: 5%">
+                        <option value="0">增加天数</option>
+                        <option value="1"}>减少天数</option>
+                    </select>
+                    <input style="width: 5%" type="text" name="days" required lay-verify="required" placeholder="请输入天数" autocomplete="off" class="layui-input" value="0">
+                    <span>天</span>
+                    <div class="layui-form-mid layui-word-aux" style="margin-left: 2%">增减天数是根据结束日期来计算</div>
+                </div>
+            </div>
+            <div class="layui-form-item">
+                <label class="layui-form-label">发布条数</label>
+                <div class="layui-input-inline">
+                    <input type="text" name="num" required lay-verify="required" placeholder="请输入发布条数" autocomplete="off" class="layui-input" value="{$list.num}">
+                </div>
+                <div class="layui-form-mid layui-word-aux">多条连体</div>
+            </div>
+            <div class="layui-form-item">
+                <label class="layui-form-label">广告显示</label>
+                <div class="layui-input-inline" style="width: 30%">
+                    <input type="radio" name="state" value="0" title="正常显示" {$list.state=='0'?'checked':''}>
+                    <input type="radio" name="state" value="1" title="不显示" {$list.state=='1'?'checked':''}>
+                    <input type="radio" name="state" value="2" title="已撤销" {$list.state=='2'?'checked':''}>
+                    <input type="radio" name="state" value="3" title="暂停中" {$list.state=='3'?'checked':''}>
+                </div>
+<!--                <div class="layui-form-mid layui-word-aux">广告为随机排序，置顶推荐显示在最上面</div>-->
+            </div>
+            <div class="layui-form-item">
+                <div class="layui-input-block">
+                    <button class="layui-btn" lay-submit lay-filter="formDemo">立即提交</button>
+                    <button type="reset" class="layui-btn layui-btn-primary">重置</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>

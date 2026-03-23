@@ -1,0 +1,86 @@
+<div class="layui-tab-content">
+    <div class="layui-tab-item layui-show">
+        <form id="app-form" class="layui-form">
+            <div class="layui-form-item">
+                <label class="layui-form-label">服务器名</label>
+                <div class="layui-input-inline">
+                    <input type="text" name="serverName" required lay-verify="required" placeholder="请输入服务器名" autocomplete="off" class="layui-input" value="{$list.serverName}">
+                </div>
+                <div class="layui-form-mid layui-word-aux">服务器名</div>
+            </div>
+            <div class="layui-form-item">
+                <label class="layui-form-label">服务器IP</label>
+                <div class="layui-input-inline">
+                    <input type="text" name="serverIp" required lay-verify="required" placeholder="请输入服务器IP" autocomplete="off" class="layui-input" value="{$list.serverIp}">
+                </div>
+                <div class="layui-form-mid layui-word-aux">服务器IP</div>
+            </div>
+            <div class="layui-form-item">
+                <label class="layui-form-label">开区时间</label>
+                <div class="layui-input-inline">
+                    <input type="text" name="openTime" required lay-verify="required" placeholder="请输入开区时间" autocomplete="off" class="layui-input" value="{$list.openTime}">
+                </div>
+                <div class="layui-form-mid layui-word-aux">开区时间</div>
+            </div>
+            <div class="layui-form-item">
+                <label class="layui-form-label">客服QQ</label>
+                <div class="layui-input-inline">
+                    <input type="text" name="QQ" required lay-verify="required" placeholder="请输入客服QQ" autocomplete="off" class="layui-input" value="{$list.QQ}">
+                </div>
+                <div class="layui-form-mid layui-word-aux">客服QQ</div>
+            </div>
+            <div class="layui-form-item">
+                <label class="layui-form-label">线路类别</label>
+                <div class="layui-input-inline">
+                    <input type="text" name="route" required lay-verify="required" placeholder="请输入线路类别" autocomplete="off" class="layui-input" value="{$list.route}">
+                </div>
+                <div class="layui-form-mid layui-word-aux">线路类别</div>
+            </div>
+            <div class="layui-form-item">
+                <label class="layui-form-label">版本介绍</label>
+                <div class="layui-input-inline">
+                    <input type="text" name="version" required lay-verify="required" placeholder="请输入版本介绍" autocomplete="off" class="layui-input" value="{$list.version}">
+                </div>
+                <div class="layui-form-mid layui-word-aux">版本介绍</div>
+            </div>
+            <div class="layui-form-item">
+                <label class="layui-form-label">主页地址</label>
+                <div class="layui-input-inline">
+                    <input type="text" name="homeUrl" required lay-verify="required" placeholder="请输入主页地址" autocomplete="off" class="layui-input" value="{$list.homeUrl}">
+                </div>
+                <div class="layui-form-mid layui-word-aux">主页地址</div>
+            </div>
+            <div class="layui-form-item">
+                <label class="layui-form-label">列表地址</label>
+                <div class="layui-input-inline">
+                    <input type="text" name="listUrl" required lay-verify="required" placeholder="请输入列表地址" autocomplete="off" class="layui-input" value="{$list.listUrl}">
+                </div>
+                <div class="layui-form-mid layui-word-aux">列表地址</div>
+            </div>
+            <div class="layui-form-item">
+                <label class="layui-form-label">M2类型</label>
+                <div class="layui-input-inline">
+                    <select name="engine" lay-verify="required">
+                        <option value="gom" {$list.engine == 'gom'?'selected':''}>gom</option>
+                        <option value="新gom" {$list.engine == '新gom'?'selected':''}>新gom</option>
+                        <option value="gee" {$list.engine == 'gee'?'selected':''}>gee</option>
+                    </select>
+                </div>
+                <div class="layui-form-mid layui-word-aux">M2类型</div>
+            </div>
+            <div class="layui-form-item">
+                <label class="layui-form-label">投放站点</label>
+                <div class="layui-input-inline">
+                    <input type="text" name="site" required lay-verify="required" placeholder="请输入投放站点" autocomplete="off" class="layui-input" value="{$list.site}">
+                </div>
+                <div class="layui-form-mid layui-word-aux">投放站点</div>
+            </div>
+            <div class="layui-form-item">
+                <div class="layui-input-block">
+                    <button class="layui-btn" lay-submit lay-filter="formDemo">立即提交</button>
+                    <button type="reset" class="layui-btn layui-btn-primary">重置</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>

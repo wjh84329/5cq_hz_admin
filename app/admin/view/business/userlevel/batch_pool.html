@@ -1,0 +1,54 @@
+<div class="layuimini-container">
+    <div class="layui-tab-content">
+        <div class="layui-tab-item layui-show">
+            <form id="app-form" class="layui-form layuimini-form">
+
+                <input type="hidden" name="level_ids" value="{$level_ids}">
+
+                <div class="layui-form-item">
+                    <label class="layui-form-label">已选等级</label>
+                    <div class="layui-input-block">
+                        {volist name="levels" id="lv"}
+                        <span class="layui-badge layui-bg-blue" style="margin-right:8px;">{$lv.level_name}(Lv{$lv.level})</span>
+                        {/volist}
+                    </div>
+                </div>
+
+                <div class="layui-form-item">
+                    <label class="layui-form-label">配置说明</label>
+                    <div class="layui-input-block">
+                        <div class="layui-word-aux">勾选怪物并填写概率。保存后将覆盖所选等级原有怪物池配置。</div>
+                    </div>
+                </div>
+
+                <div class="layui-form-item">
+                    <div class="layui-input-block" style="margin-left:0;">
+                        <div class="layui-row layui-col-space15">
+                            {volist name="monsters" id="m"}
+                            <div class="layui-col-md3 layui-col-sm4 layui-col-xs6">
+                                <div style="border:1px solid #eee;border-radius:6px;padding:10px;min-height:210px;">
+                                    <div style="text-align:center;height:90px;line-height:90px;">
+                                        <img src="{$m.images}" style="max-height:90px;max-width:100%;" />
+                                    </div>
+                                    <div style="margin-top:8px;">
+                                        <input type="checkbox" name="gw_ids[]" value="{$m.id}" title="{$m.title}">
+                                    </div>
+                                    <div style="margin-top:8px;">
+                                        <input type="number" name="prob[{$m.id}]" min="0" value="0" class="layui-input" placeholder="输入概率">
+                                    </div>
+                                </div>
+                            </div>
+                            {/volist}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="layui-form-item text-center">
+                    <button type="submit" class="layui-btn layui-btn-normal layui-btn-sm" lay-submit>保存</button>
+                    <button type="reset" class="layui-btn layui-btn-primary layui-btn-sm">重置</button>
+                </div>
+
+            </form>
+        </div>
+    </div>
+</div>

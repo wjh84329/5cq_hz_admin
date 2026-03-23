@@ -1,0 +1,63 @@
+<div class="layui-tab-content">
+    <div class="layui-tab-item layui-show">
+        <form id="app-form" class="layui-form">
+            <div class="layui-form-item">
+                <label class="layui-form-label">红包名称</label>
+                <div class="layui-input-inline">
+                    <input type="text" name="name" required lay-verify="required" placeholder="0000" autocomplete="off" class="layui-input" value="">
+                </div>
+                <div class="layui-form-mid layui-word-aux">红包名称</div>
+            </div>
+            <div class="layui-form-item">
+<!--                <label class="layui-form-label">红包类型</label>-->
+                <div class="layui-input-inline">
+                    <input type="hidden" name="type" value="0" title="单次" checked>
+                </div>
+<!--                <div class="layui-form-mid layui-word-aux">红包类型</div>-->
+            </div>
+            <div class="layui-form-item">
+                <label class="layui-form-label">红包数量</label>
+                <div class="layui-input-inline">
+                    <input type="text" name="num" required lay-verify="required" placeholder="0000" autocomplete="off" class="layui-input" value="">
+                </div>
+                <div class="layui-form-mid layui-word-aux">红包数量</div>
+            </div>
+            <div class="layui-form-item">
+                <label class="layui-form-label">红包金额</label>
+                <div class="layui-input-inline">
+                    <input type="text" name="price" required lay-verify="required" placeholder="0000" autocomplete="off" class="layui-input" value="">
+                </div>
+                <div class="layui-form-mid layui-word-aux">红包金额:如果是固定红包，请直接填写数字；否则请填写10-20</div>
+            </div>
+            <div class="layui-form-item">
+                <label class="layui-form-label">发放方式</label>
+                <div class="layui-input-inline">
+                    <input type="radio" name="statu" value="0" title="立即发送" checked>
+                    <input type="radio" name="statu" value="1" title="定时发送">
+                </div>
+                <div class="layui-form-mid layui-word-aux">发放方式：如需定时发送，请填写发送时间</div>
+            </div>
+            <!--<div class="layui-form-item">
+                <label class="layui-form-label">发放日期</label>
+                <div class="layui-input-inline">
+                    <select name="field_id" lay-verify="required" data-select="{:url('business.hb/cs')}" lay-search  data-fields="id,name" >
+                    </select>
+                </div>
+                <div class="layui-form-mid layui-word-aux">发放日期</div>
+            </div>-->
+            <div class="layui-form-item">
+                <label class="layui-form-label">发送时间</label>
+                <div class="layui-input-inline">
+                    <input type="time" name="fssj" required placeholder="0000" autocomplete="off" class="layui-input" value="">
+                </div>
+                <div class="layui-form-mid layui-word-aux">发送时间</div>
+            </div>
+            <div class="layui-form-item">
+                <div class="layui-input-block">
+                    <button class="layui-btn" lay-submit lay-filter="formDemo">立即提交</button>
+                    <button type="reset" class="layui-btn layui-btn-primary">重置</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>

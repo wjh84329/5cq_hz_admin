@@ -1,0 +1,59 @@
+<div class="layui-tab-content">
+    <div class="layui-tab-item layui-show">
+        <form id="app-form" class="layui-form">
+            <div class="layui-form-item">
+                <label class="layui-form-label">活动标题</label>
+                <div class="layui-input-inline">
+                    <input type="text" name="title" required lay-verify="required" placeholder="0000" autocomplete="off" class="layui-input" value="">
+                </div>
+                <div class="layui-form-mid layui-word-aux">活动标题</div>
+            </div>
+            <div class="layui-form-item layui-form-text">
+                <label class="layui-form-label">活动简介</label>
+                <div class="layui-input-block ">
+                    <textarea name="info" placeholder="请输入内容" class="layui-textarea"></textarea>
+                </div>
+                <div class="layui-form-mid layui-word-aux">活动简介</div>
+            </div>
+            <div class="layui-form-item">
+                <label class="layui-form-label">活动图片</label>
+                <div class="layui-input-block layuimini-upload">
+                    <input name="play_img" type="hidden" class="layui-input layui-col-xs6" lay-verify="required" lay-reqtext="请上传分类图片" placeholder="请上传分类图片" value="">
+                    <div class="layui-input-inline">
+                        <span><a class="layui-btn" data-upload="play_img" data-upload-number="one" data-upload-exts="*image" data-upload-icon="image"><i class="fa fa-upload"></i> 上传</a></span>
+                    </div>
+                </div>
+                <div class="layui-form-mid layui-word-aux">活动图片</div>
+            </div>
+            <div class="layui-form-item">
+                <label class="layui-form-label">活动跳转链接</label>
+                <div class="layui-input-inline">
+                    <input type="text" name="play_link" required lay-verify="required" placeholder="123456789" autocomplete="off" class="layui-input" value="">
+                </div>
+                <div class="layui-form-mid layui-word-aux">活动跳转链接</div>
+            </div>
+            <div class="layui-form-item">
+                <label class="layui-form-label">banner展示状态</label>
+                <div class="layui-input-inline">
+                    <input type="radio" name="banner_statu" value="0" title="展示" checked>
+                    <input type="radio" name="banner_statu" value="1" title="未展示">
+                </div>
+                <div class="layui-form-mid layui-word-aux">banner展示状态</div>
+            </div>
+            <div class="layui-form-item">
+                <label class="layui-form-label">活动展示状态</label>
+                <div class="layui-input-inline">
+                    <input type="radio" name="play_statu" value="0" title="展示" checked>
+                    <input type="radio" name="play_statu" value="1" title="未展示">
+                </div>
+                <div class="layui-form-mid layui-word-aux">活动展示状态</div>
+            </div>
+            <div class="layui-form-item">
+                <div class="layui-input-block">
+                    <button class="layui-btn" lay-submit lay-filter="formDemo">立即提交</button>
+                    <button type="reset" class="layui-btn layui-btn-primary">重置</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>

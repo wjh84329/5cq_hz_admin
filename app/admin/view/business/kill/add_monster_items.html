@@ -1,0 +1,45 @@
+<div class="layui-tab-content">
+    <div class="layui-tab-item layui-show">
+        <form id="app-form" class="layui-form layuimini-form">
+            <blockquote class="layui-elem-quote">
+                当前怪物：{$gw.title|default=''}。勾选物品并填写概率、数量后保存。
+            </blockquote>
+
+            <div class="layui-form-item">
+                <div class="layui-input-block" style="margin-left:0;">
+                    <div class="layui-row layui-col-space15">
+                        {volist name="items" id="it"}
+                        <div class="layui-col-md3 layui-col-sm4 layui-col-xs6">
+                            <div style="border:1px solid #eee;border-radius:6px;padding:10px;min-height:250px;">
+                                <div style="text-align:center;height:90px;line-height:90px;">
+                                    <img src="{$it.images}" style="max-height:90px;max-width:100%;" />
+                                </div>
+                                <div style="margin-top:8px;">
+                                    <input type="checkbox" name="item_ids[]" value="{$it.id}" title="{$it.title}" {if condition="$it.checked==1"}checked{/if}>
+                                </div>
+                                <div style="margin-top:8px;">
+                                    <label class="layui-form-label required">概率</label>
+                                    <input type="number" min="0" name="prob[{$it.id}]" value="{$it.probability}" class="layui-input" placeholder="概率">
+                                </div>
+                                <div style="margin-top:8px;">
+                                    <label class="layui-form-label required">最小数量</label>
+                                    <input type="number" min="1" name="min_num[{$it.id}]" value="{$it.min_num}" class="layui-input" placeholder="最小数量">
+                                </div>
+                                <div style="margin-top:8px;">
+                                    <label class="layui-form-label required">最大数量</label>
+                                    <input type="number" min="1" name="max_num[{$it.id}]" value="{$it.max_num}" class="layui-input" placeholder="最大数量">
+                                </div>
+                            </div>
+                        </div>
+                        {/volist}
+                    </div>
+                </div>
+            </div>
+
+            <div class="layui-form-item text-center">
+                <button type="submit" class="layui-btn layui-btn-normal layui-btn-sm" lay-submit>保存</button>
+                <button type="reset" class="layui-btn layui-btn-primary layui-btn-sm">重置</button>
+            </div>
+        </form>
+    </div>
+</div>

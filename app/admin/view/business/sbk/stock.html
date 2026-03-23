@@ -1,0 +1,30 @@
+<div class="layui-tab-content">
+    <div class="layui-tab-item layui-show">
+        <form id="app-form" class="layui-form">
+            <div class="layui-form-item">
+                <label class="layui-form-label">输赢判断</label>
+                <div class="">
+                    {if $list.sy_type=='0'}
+                    <input type="radio" name="sy_type" value="0" title="未判断" checked>
+                    <input type="radio" name="sy_type" value="1" title="红方赢">
+                    <input type="radio" name="sy_type" value="2" title="蓝方赢">
+                    {elseif $list.sy_type=='1'}
+                    <input type="radio" name="sy_type" value="0" title="未判断">
+                    <input type="radio" name="sy_type" value="1" title="红方赢" checked>
+                    <input type="radio" name="sy_type" value="2" title="蓝方赢">
+                    {elseif $list.sy_type=='2'}
+                    <input type="radio" name="sy_type" value="0" title="未判断">
+                    <input type="radio" name="sy_type" value="1" title="红方赢">
+                    <input type="radio" name="sy_type" value="2" title="蓝方赢" checked>
+                    {/if}
+                </div>
+            </div>
+            <div class="layui-form-item">
+                <div class="layui-input-block">
+                    <button class="layui-btn" lay-submit lay-filter="formDemo">立即提交</button>
+                    <button type="reset" class="layui-btn layui-btn-primary">重置</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>

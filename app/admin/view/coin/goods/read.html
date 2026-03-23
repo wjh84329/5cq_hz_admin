@@ -1,0 +1,77 @@
+<div class="layui-tab-content">
+    <div class="layui-tab-item layui-show">
+        <form id="app-form" class="layui-form">
+            <div class="layui-form-item">
+                <label class="layui-form-label">商品标题</label>
+                <div class="layui-input-inline">
+                    <input disabled type="text" name="title" required lay-verify="required" placeholder="0000" autocomplete="off" class="layui-input" value="{$list.title}">
+                </div>
+                <div class="layui-form-mid layui-word-aux">商品标题</div>
+            </div>
+            <div class="layui-form-item">
+                <label class="layui-form-label">商品图片</label>
+                <div class="layui-input-block layuimini-upload">
+                    <input name="img" type="hidden" class="layui-input layui-col-xs6" lay-verify="required" lay-reqtext="请上传分类图片" placeholder="请上传分类图片" value="{$list.img}">
+                    <!--<div class="layui-input-inline">
+                        <span><a class="layui-btn" data-upload="img" data-upload-number="one" data-upload-exts="*image" data-upload-icon="image"><i class="fa fa-upload"></i> 上传</a></span>
+                    </div>-->
+                </div>
+<!--                <div class="layui-form-mid layui-word-aux">商品图片</div>-->
+            </div>
+            <div class="layui-form-item">
+                <label class="layui-form-label">商品价值（金币）</label>
+                <div class="layui-input-inline">
+                    <input disabled type="text" name="price" required lay-verify="required" placeholder="123456789" autocomplete="off" class="layui-input" value="{$list.price}">
+                </div>
+                <div class="layui-form-mid layui-word-aux">商品价值（金币）</div>
+            </div>
+            <div class="layui-form-item">
+                <label class="layui-form-label">商品库存</label>
+                <div class="layui-input-inline">
+                    <input disabled type="text" name="num" required lay-verify="required" placeholder="123456789" autocomplete="off" class="layui-input" value="{$list.num}">
+                </div>
+                <div class="layui-form-mid layui-word-aux">商品库存</div>
+            </div>
+            <div class="layui-form-item">
+                <label class="layui-form-label">商品已售</label>
+                <div class="layui-input-inline">
+                    <input disabled type="text" name="sold" required lay-verify="required" placeholder="123456789" autocomplete="off" class="layui-input" value="{$list.sold}">
+                </div>
+                <div class="layui-form-mid layui-word-aux">商品已售</div>
+            </div>
+            <div class="layui-form-item">
+                <label class="layui-form-label">商品排序</label>
+                <div class="layui-input-inline">
+                    <input disabled type="text" name="sort" required lay-verify="required" placeholder="123456789" autocomplete="off" class="layui-input" value="{$list.sort}">
+                </div>
+                <div class="layui-form-mid layui-word-aux">商品排序，越大越靠前</div>
+            </div>
+            <div class="layui-form-item">
+                <label class="layui-form-label">商品类型</label>
+                <div class="layui-input-inline">
+                    {if condition="$list.type==0"}
+                    <input type="radio" name="type" value="0" title="实物" checked>
+                    <input disabled type="radio" name="type" value="1" title="虚拟">
+                    {else /}
+                    <input type="radio" name="type" value="0" title="实物">
+                    <input disabled type="radio" name="type" value="1" title="虚拟" checked>
+                    {/if}
+                </div>
+                <div class="layui-form-mid layui-word-aux">商品类型</div>
+            </div>
+            <div class="layui-form-item">
+                <label class="layui-form-label">是否展示</label>
+                <div class="layui-input-inline">
+                    {if condition="$list.show==0"}
+                    <input type="radio" name="show" value="0" title="展示" checked>
+                    <input disabled type="radio" name="show" value="1" title="未展示" >
+                    {else /}
+                    <input disabled type="radio" name="show" value="0" title="展示">
+                    <input type="radio" name="show" value="1" title="未展示" checked>
+                    {/if}
+                </div>
+                <div class="layui-form-mid layui-word-aux">是否展示</div>
+            </div>
+        </form>
+    </div>
+</div>

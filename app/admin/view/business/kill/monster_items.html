@@ -1,0 +1,13 @@
+<div class="layuimini-container">
+    <div class="layuimini-main">
+        <blockquote class="layui-elem-quote">
+            当前怪物：{$gw.title|default=''}
+        </blockquote>
+        <table id="currentTable" class="layui-table layui-hide"
+               data-auth-add_monster_items="{:auth('business.kill/add_monster_items')}"
+               data-auth-delete="{:auth('business.kill/delete_monster_item')}"
+               data-auth-modify="{:auth('business.kill/modify_monster_item')}"
+               lay-filter="currentTable">
+        </table>
+    </div>
+</div>

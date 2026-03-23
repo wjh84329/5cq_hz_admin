@@ -1,0 +1,8 @@
+[boxurl]
+url=https://qiantai.5cq.net/
+ad=https://hz.5cq.net/
+ot=https://box.5cq.wang/
+
+[update]
+ver=2.0.0
+url=http://admin.145pay.com/swagger-ui/asd.zip

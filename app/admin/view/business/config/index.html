@@ -1,0 +1,28 @@
+<div class="layuimini-container">
+    <div class="layuimini-main" id="app">
+
+        <div class="layui-tab layui-tab-brief" lay-filter="docDemoTabBrief">
+            <ul class="layui-tab-title">
+                <li class="layui-this">基础设置</li>
+                <li>运营参数配置</li>
+                <li>金币抽奖配置</li>
+                <li>实物抽奖配置</li>
+            </ul>
+            <div class="layui-tab-content">
+                <div class="layui-tab-item layui-show">
+                    {include file="business/config/basic" /}
+                </div>
+                <div class="layui-tab-item">
+                    {include file="business/config/operation" /}
+                </div>
+                <div class="layui-tab-item">
+                    {include file="business/config/lucky_coin" /}
+                </div>
+                <div class="layui-tab-item">
+                    {include file="business/config/lucky_prize" /}
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>

@@ -1,0 +1,305 @@
+<div class="layui-tab-content">
+    <div class="layui-tab-item layui-show">
+        <form id="app-form" class="layui-form layuimini-form">
+            <input type="hidden" name="name" value="{$luckyCoin.name}">
+            <div class="layui-form-item">
+                <label class="layui-form-label required">背景图片</label>
+                <div class="layui-input-block layuimini-upload">
+                    <input name="luckyCoinBackgroundImage" type="hidden" class="layui-input layui-col-xs6" lay-verify="required" lay-reqtext="请上传分类图片" placeholder="请上传分类图片" value="{$luckyCoin.luckyCoinBackgroundImage|default=''}">
+                    <div class="layui-input-inline">
+                        <span><a class="layui-btn" data-upload="luckyCoinBackgroundImage" data-upload-number="one" data-upload-exts="*image" data-upload-icon="image"><i class="fa fa-upload"></i> 上传</a></span>
+                    </div>
+                </div>
+                <div class="layui-form-mid layui-word-aux">金币抽奖的背景图片</div>
+            </div>
+            <div class="layui-form-item">
+                <label class="layui-form-label">奖品背景色</label>
+                <div class="layui-input-inline">
+                    <input type="text" name="luckyCoinItemBackgroundColor" required lay-verify="required" placeholder="0000" autocomplete="off" class="layui-input" value="{$luckyCoin.luckyCoinItemBackgroundColor}">
+                </div>
+                <div class="layui-form-mid layui-word-aux">金币抽奖的奖品背景色</div>
+            </div>
+            <div class="layui-form-item">
+                <label class="layui-form-label">中奖奖品背景色</label>
+                <div class="layui-input-inline">
+                    <input type="text" name="luckyCoinItemSelectBackgroundColor" required lay-verify="required" placeholder="0000" autocomplete="off" class="layui-input" value="{$luckyCoin.luckyCoinItemSelectBackgroundColor}">
+                </div>
+                <div class="layui-form-mid layui-word-aux">中将奖品被选中时的背景色</div>
+            </div>
+            <div class="layui-form-item">
+                <label class="layui-form-label required">开始按钮图片</label>
+                <div class="layui-input-block layuimini-upload">
+                    <input name="luckyCoinStartBtn" type="hidden" class="layui-input layui-col-xs6" lay-verify="required" lay-reqtext="请上传分类图片" placeholder="请上传分类图片" value="{$luckyCoin.luckyCoinStartBtn|default=''}">
+                    <div class="layui-input-inline">
+                        <span><a class="layui-btn" data-upload="luckyCoinStartBtn" data-upload-number="one" data-upload-exts="*image" data-upload-icon="image"><i class="fa fa-upload"></i> 上传</a></span>
+                    </div>
+                </div>
+                <div class="layui-form-mid layui-word-aux">中间位置开始按钮的图片</div>
+            </div>
+            <div class="layui-form-item">
+                <label class="layui-form-label required">统一奖品图片</label>
+                <div class="layui-input-block layuimini-upload">
+                    <input name="luckyCoinImg" type="hidden" class="layui-input layui-col-xs6" lay-verify="required" lay-reqtext="请上传分类图片" placeholder="请上传分类图片" value="{$luckyCoin.luckyCoinImg|default=''}">
+                    <div class="layui-input-inline">
+                        <span><a class="layui-btn" data-upload="luckyCoinImg" data-upload-number="one" data-upload-exts="*image" data-upload-icon="image"><i class="fa fa-upload"></i> 上传</a></span>
+                    </div>
+                </div>
+                <div class="layui-form-mid layui-word-aux">如果奖品没有单独设置，则统一使用此图片</div>
+            </div>
+            <div class="layui-form-item">
+                <label class="layui-form-label required">奖品1图片</label>
+                <div class="layui-input-block layuimini-upload">
+                    <input name="luckyCoinItemImg1" type="hidden" class="layui-input layui-col-xs6" lay-verify="required" lay-reqtext="请上传分类图片" placeholder="请上传分类图片" value="{$luckyCoin.luckyCoinItemImg1|default=''}">
+                    <div class="layui-input-inline">
+                        <span><a class="layui-btn" data-upload="luckyCoinItemImg1" data-upload-number="one" data-upload-exts="*image" data-upload-icon="image"><i class="fa fa-upload"></i> 上传</a></span>
+                    </div>
+                </div>
+<!--                <div class="layui-form-mid layui-word-aux">奖品1图片</div>-->
+            </div>
+            <div class="layui-form-item">
+                <label class="layui-form-label">奖品1标题</label>
+                <div class="layui-input-inline">
+                    <input type="text" name="luckyCoinItemTitle1" required lay-verify="required" placeholder="123456789" autocomplete="off" class="layui-input" value="{$luckyCoin.luckyCoinItemTitle1}">
+                </div>
+                <div class="layui-form-mid layui-word-aux">奖品1标题</div>
+            </div>
+            <div class="layui-form-item">
+                <label class="layui-form-label">奖品1倍数</label>
+                <div class="layui-input-inline">
+                    <input type="text" name="luckyCoinItemNumber1" required lay-verify="required" placeholder="123456789" autocomplete="off" class="layui-input" value="{$luckyCoin.luckyCoinItemNumber1}">
+                </div>
+                <div class="layui-form-mid layui-word-aux">奖品1倍数</div>
+            </div>
+            <div class="layui-form-item">
+                <label class="layui-form-label">奖品1概率</label>
+                <div class="layui-input-inline">
+                    <input type="text" name="luckyCoinItemProb1" required lay-verify="required" placeholder="123456789" autocomplete="off" class="layui-input" value="{$luckyCoin.luckyCoinItemProb1}">
+                </div>
+                <div class="layui-form-mid layui-word-aux">奖品1概率</div>
+            </div>
+            <div class="layui-form-item">
+                <label class="layui-form-label required">奖品2图片</label>
+                <div class="layui-input-block layuimini-upload">
+                    <input name="luckyCoinItemImg2" type="hidden" class="layui-input layui-col-xs6" lay-verify="required" lay-reqtext="请上传分类图片" placeholder="请上传分类图片" value="{$luckyCoin.luckyCoinItemImg2|default=''}">
+                    <div class="layui-input-inline">
+                        <span><a class="layui-btn" data-upload="luckyCoinItemImg2" data-upload-number="one" data-upload-exts="*image" data-upload-icon="image"><i class="fa fa-upload"></i> 上传</a></span>
+                    </div>
+                </div>
+<!--                <div class="layui-form-mid layui-word-aux">奖品2图片</div>-->
+            </div>
+            <div class="layui-form-item">
+                <label class="layui-form-label">奖品2标题</label>
+                <div class="layui-input-inline">
+                    <input type="text" name="luckyCoinItemTitle2" required lay-verify="required" placeholder="123456789" autocomplete="off" class="layui-input" value="{$luckyCoin.luckyCoinItemTitle2}">
+                </div>
+                <div class="layui-form-mid layui-word-aux">奖品2标题</div>
+            </div>
+            <div class="layui-form-item">
+                <label class="layui-form-label">奖品2倍率</label>
+                <div class="layui-input-inline">
+                    <input type="text" name="luckyCoinItemNumber2" required lay-verify="required" placeholder="123456789" autocomplete="off" class="layui-input" value="{$luckyCoin.luckyCoinItemNumber2}">
+                </div>
+                <div class="layui-form-mid layui-word-aux">奖品2倍率</div>
+            </div>
+            <div class="layui-form-item">
+                <label class="layui-form-label">奖品2概率</label>
+                <div class="layui-input-inline">
+                    <input type="text" name="luckyCoinItemProb2" required lay-verify="required" placeholder="123456789" autocomplete="off" class="layui-input" value="{$luckyCoin.luckyCoinItemProb2}">
+                </div>
+                <div class="layui-form-mid layui-word-aux">奖品2概率</div>
+            </div>
+            <div class="layui-form-item">
+                <label class="layui-form-label required">奖品3图片</label>
+                <div class="layui-input-block layuimini-upload">
+                    <input name="luckyCoinItemImg3" type="hidden" class="layui-input layui-col-xs6" lay-verify="required" lay-reqtext="请上传分类图片" placeholder="请上传分类图片" value="{$luckyCoin.luckyCoinItemImg3|default=''}">
+                    <div class="layui-input-inline">
+                        <span><a class="layui-btn" data-upload="luckyCoinItemImg3" data-upload-number="one" data-upload-exts="*image" data-upload-icon="image"><i class="fa fa-upload"></i> 上传</a></span>
+                    </div>
+                </div>
+<!--                <div class="layui-form-mid layui-word-aux">奖品3图片</div>-->
+            </div>
+            <div class="layui-form-item">
+                <label class="layui-form-label">奖品3标题</label>
+                <div class="layui-input-inline">
+                    <input type="text" name="luckyCoinItemTitle3" required lay-verify="required" placeholder="123456789" autocomplete="off" class="layui-input" value="{$luckyCoin.luckyCoinItemTitle3}">
+                </div>
+                <div class="layui-form-mid layui-word-aux">奖品3标题</div>
+            </div>
+            <div class="layui-form-item">
+                <label class="layui-form-label">奖品3倍率</label>
+                <div class="layui-input-inline">
+                    <input type="text" name="luckyCoinItemNumber3" required lay-verify="required" placeholder="123456789" autocomplete="off" class="layui-input" value="{$luckyCoin.luckyCoinItemNumber3}">
+                </div>
+                <div class="layui-form-mid layui-word-aux">奖品3倍率</div>
+            </div>
+            <div class="layui-form-item">
+                <label class="layui-form-label">奖品3概率</label>
+                <div class="layui-input-inline">
+                    <input type="text" name="luckyCoinItemProb3" required lay-verify="required" placeholder="123456789" autocomplete="off" class="layui-input" value="{$luckyCoin.luckyCoinItemProb3}">
+                </div>
+                <div class="layui-form-mid layui-word-aux">奖品3概率</div>
+            </div>
+            <div class="layui-form-item">
+                <label class="layui-form-label required">奖品4图片</label>
+                <div class="layui-input-block layuimini-upload">
+                    <input name="luckyCoinItemImg4" type="hidden" class="layui-input layui-col-xs6" lay-verify="required" lay-reqtext="请上传分类图片" placeholder="请上传分类图片" value="{$luckyCoin.luckyCoinItemImg4|default=''}">
+                    <div class="layui-input-inline">
+                        <span><a class="layui-btn" data-upload="luckyCoinItemImg4" data-upload-number="one" data-upload-exts="*image" data-upload-icon="image"><i class="fa fa-upload"></i> 上传</a></span>
+                    </div>
+                </div>
+<!--                <div class="layui-form-mid layui-word-aux">奖品4图片</div>-->
+            </div>
+            <div class="layui-form-item">
+                <label class="layui-form-label">奖品4标题</label>
+                <div class="layui-input-inline">
+                    <input type="text" name="luckyCoinItemTitle4" required lay-verify="required" placeholder="123456789" autocomplete="off" class="layui-input" value="{$luckyCoin.luckyCoinItemTitle4}">
+                </div>
+                <div class="layui-form-mid layui-word-aux">奖品4标题</div>
+            </div>
+            <div class="layui-form-item">
+                <label class="layui-form-label">奖品4倍率</label>
+                <div class="layui-input-inline">
+                    <input type="text" name="luckyCoinItemNumber4" required lay-verify="required" placeholder="123456789" autocomplete="off" class="layui-input" value="{$luckyCoin.luckyCoinItemNumber4}">
+                </div>
+                <div class="layui-form-mid layui-word-aux">奖品4倍率</div>
+            </div>
+            <div class="layui-form-item">
+                <label class="layui-form-label">奖品4概率</label>
+                <div class="layui-input-inline">
+                    <input type="text" name="luckyCoinItemProb4" required lay-verify="required" placeholder="123456789" autocomplete="off" class="layui-input" value="{$luckyCoin.luckyCoinItemProb4}">
+                </div>
+                <div class="layui-form-mid layui-word-aux">奖品4概率</div>
+            </div>
+            <div class="layui-form-item">
+                <label class="layui-form-label required">奖品5图片</label>
+                <div class="layui-input-block layuimini-upload">
+                    <input name="luckyCoinItemImg5" type="hidden" class="layui-input layui-col-xs6" lay-verify="required" lay-reqtext="请上传分类图片" placeholder="请上传分类图片" value="{$luckyCoin.luckyCoinItemImg5|default=''}">
+                    <div class="layui-input-inline">
+                        <span><a class="layui-btn" data-upload="luckyCoinItemImg5" data-upload-number="one" data-upload-exts="*image" data-upload-icon="image"><i class="fa fa-upload"></i> 上传</a></span>
+                    </div>
+                </div>
+<!--                <div class="layui-form-mid layui-word-aux">奖品5图片</div>-->
+            </div>
+            <div class="layui-form-item">
+                <label class="layui-form-label">奖品5标题</label>
+                <div class="layui-input-inline">
+                    <input type="text" name="luckyCoinItemTitle5" required lay-verify="required" placeholder="123456789" autocomplete="off" class="layui-input" value="{$luckyCoin.luckyCoinItemTitle5}">
+                </div>
+                <div class="layui-form-mid layui-word-aux">奖品5标题</div>
+            </div>
+            <div class="layui-form-item">
+                <label class="layui-form-label">奖品5倍率</label>
+                <div class="layui-input-inline">
+                    <input type="text" name="luckyCoinItemNumber5" required lay-verify="required" placeholder="123456789" autocomplete="off" class="layui-input" value="{$luckyCoin.luckyCoinItemNumber5}">
+                </div>
+                <div class="layui-form-mid layui-word-aux">奖品5倍率</div>
+            </div>
+            <div class="layui-form-item">
+                <label class="layui-form-label">奖品5概率</label>
+                <div class="layui-input-inline">
+                    <input type="text" name="luckyCoinItemProb5" required lay-verify="required" placeholder="123456789" autocomplete="off" class="layui-input" value="{$luckyCoin.luckyCoinItemProb5}">
+                </div>
+                <div class="layui-form-mid layui-word-aux">奖品5概率</div>
+            </div>
+            <div class="layui-form-item">
+                <label class="layui-form-label required">奖品6图片</label>
+                <div class="layui-input-block layuimini-upload">
+                    <input name="luckyCoinItemImg6" type="hidden" class="layui-input layui-col-xs6" lay-verify="required" lay-reqtext="请上传分类图片" placeholder="请上传分类图片" value="{$luckyCoin.luckyCoinItemImg6|default=''}">
+                    <div class="layui-input-inline">
+                        <span><a class="layui-btn" data-upload="luckyCoinItemImg6" data-upload-number="one" data-upload-exts="*image" data-upload-icon="image"><i class="fa fa-upload"></i> 上传</a></span>
+                    </div>
+                </div>
+<!--                <div class="layui-form-mid layui-word-aux">奖品6图片</div>-->
+            </div>
+            <div class="layui-form-item">
+                <label class="layui-form-label">奖品6标题</label>
+                <div class="layui-input-inline">
+                    <input type="text" name="luckyCoinItemTitle6" required lay-verify="required" placeholder="123456789" autocomplete="off" class="layui-input" value="{$luckyCoin.luckyCoinItemTitle6}">
+                </div>
+                <div class="layui-form-mid layui-word-aux">奖品6标题</div>
+            </div>
+            <div class="layui-form-item">
+                <label class="layui-form-label">奖品6倍率</label>
+                <div class="layui-input-inline">
+                    <input type="text" name="luckyCoinItemNumber6" required lay-verify="required" placeholder="123456789" autocomplete="off" class="layui-input" value="{$luckyCoin.luckyCoinItemNumber6}">
+                </div>
+                <div class="layui-form-mid layui-word-aux">奖品6倍率</div>
+            </div>
+            <div class="layui-form-item">
+                <label class="layui-form-label">奖品6概率</label>
+                <div class="layui-input-inline">
+                    <input type="text" name="luckyCoinItemProb6" required lay-verify="required" placeholder="123456789" autocomplete="off" class="layui-input" value="{$luckyCoin.luckyCoinItemProb6}">
+                </div>
+                <div class="layui-form-mid layui-word-aux">奖品6概率</div>
+            </div>
+            <div class="layui-form-item">
+                <label class="layui-form-label required">奖品7图片</label>
+                <div class="layui-input-block layuimini-upload">
+                    <input name="luckyCoinItemImg7" type="hidden" class="layui-input layui-col-xs6" lay-verify="required" lay-reqtext="请上传分类图片" placeholder="请上传分类图片" value="{$luckyCoin.luckyCoinItemImg7|default=''}">
+                    <div class="layui-input-inline">
+                        <span><a class="layui-btn" data-upload="luckyCoinItemImg7" data-upload-number="one" data-upload-exts="*image" data-upload-icon="image"><i class="fa fa-upload"></i> 上传</a></span>
+                    </div>
+                </div>
+<!--                <div class="layui-form-mid layui-word-aux">奖品7图片</div>-->
+            </div>
+            <div class="layui-form-item">
+                <label class="layui-form-label">奖品7标题</label>
+                <div class="layui-input-inline">
+                    <input type="text" name="luckyCoinItemTitle7" required lay-verify="required" placeholder="123456789" autocomplete="off" class="layui-input" value="{$luckyCoin.luckyCoinItemTitle7}">
+                </div>
+                <div class="layui-form-mid layui-word-aux">奖品7标题</div>
+            </div>
+            <div class="layui-form-item">
+                <label class="layui-form-label">奖品7倍率</label>
+                <div class="layui-input-inline">
+                    <input type="text" name="luckyCoinItemNumber7" required lay-verify="required" placeholder="123456789" autocomplete="off" class="layui-input" value="{$luckyCoin.luckyCoinItemNumber7}">
+                </div>
+                <div class="layui-form-mid layui-word-aux">奖品7倍率</div>
+            </div>
+            <div class="layui-form-item">
+                <label class="layui-form-label">奖品7概率</label>
+                <div class="layui-input-inline">
+                    <input type="text" name="luckyCoinItemProb7" required lay-verify="required" placeholder="123456789" autocomplete="off" class="layui-input" value="{$luckyCoin.luckyCoinItemProb7}">
+                </div>
+                <div class="layui-form-mid layui-word-aux">奖品7概率</div>
+            </div>
+            <div class="layui-form-item">
+                <label class="layui-form-label required">奖品8图片</label>
+                <div class="layui-input-block layuimini-upload">
+                    <input name="luckyCoinItemImg8" type="hidden" class="layui-input layui-col-xs6" lay-verify="required" lay-reqtext="请上传分类图片" placeholder="请上传分类图片" value="{$luckyCoin.luckyCoinItemImg8|default=''}">
+                    <div class="layui-input-inline">
+                        <span><a class="layui-btn" data-upload="luckyCoinItemImg8" data-upload-number="one" data-upload-exts="*image" data-upload-icon="image"><i class="fa fa-upload"></i> 上传</a></span>
+                    </div>
+                </div>
+<!--                <div class="layui-form-mid layui-word-aux">奖品8图片</div>-->
+            </div>
+            <div class="layui-form-item">
+                <label class="layui-form-label">奖品8标题</label>
+                <div class="layui-input-inline">
+                    <input type="text" name="luckyCoinItemTitle8" required lay-verify="required" placeholder="123456789" autocomplete="off" class="layui-input" value="{$luckyCoin.luckyCoinItemTitle8}">
+                </div>
+                <div class="layui-form-mid layui-word-aux">奖品8标题</div>
+            </div>
+            <div class="layui-form-item">
+                <label class="layui-form-label">奖品8倍率</label>
+                <div class="layui-input-inline">
+                    <input type="text" name="luckyCoinItemNumber8" required lay-verify="required" placeholder="123456789" autocomplete="off" class="layui-input" value="{$luckyCoin.luckyCoinItemNumber8}">
+                </div>
+                <div class="layui-form-mid layui-word-aux">奖品8倍率</div>
+            </div>
+            <div class="layui-form-item">
+                <label class="layui-form-label">奖品8概率</label>
+                <div class="layui-input-inline">
+                    <input type="text" name="luckyCoinItemProb8" required lay-verify="required" placeholder="123456789" autocomplete="off" class="layui-input" value="{$luckyCoin.luckyCoinItemProb8}">
+                </div>
+                <div class="layui-form-mid layui-word-aux">奖品8概率</div>
+            </div>
+            <div class="layui-form-item">
+                <div class="layui-input-block">
+                    <button class="layui-btn" lay-submit lay-filter="formDemo">立即保存</button>
+                    <button type="reset" class="layui-btn layui-btn-primary">重置</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>

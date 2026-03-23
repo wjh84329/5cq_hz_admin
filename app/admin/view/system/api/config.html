@@ -1,0 +1,108 @@
+<div class="layui-tab-content">
+  <div class="layui-tab-item layui-show">
+    <form id="app-form" class="layui-form layuimini-form">
+      <div class="layui-form-item">
+        <label class="layui-form-label required">AccessKey ID</label>
+        <div class="layui-input-block flex">
+          <input type="text" name="accessKeyId" class="layui-input" value="{$list.accessKeyId|default=''}">
+          <tip>阿里云AccessKey ID。</tip>
+        </div>
+      </div>
+      <div class="layui-form-item">
+        <label class="layui-form-label required">AccessKey Secret</label>
+        <div class="layui-input-block flex">
+          <input type="text" name="accessKeySecret" class="layui-input" value="{$list.accessKeySecret|default=''}">
+          <tip>阿里云AccessKey Secret。</tip>
+        </div>
+      </div>
+      <div class="layui-form-item">
+        <label class="layui-form-label required">访问域名</label>
+        <div class="layui-input-block flex">
+          <input type="text" name="endpoint" class="layui-input" value="{$list.endpoint|default=''}">
+          <tip>阿里云短信访问域名,非专业人士请勿修改。</tip>
+        </div>
+      </div>
+      <div class="layui-form-item">
+        <label class="layui-form-label required">签名名称</label>
+        <div class="layui-input-block flex">
+          <input type="text" name="signName" class="layui-input" value="{$list.signName|default=''}">
+          <tip>阿里云短信签名名称。</tip>
+        </div>
+      </div>
+      <div class="layui-form-item">
+        <label class="layui-form-label required">模板code</label>
+        <div class="layui-input-block flex">
+          <input type="text" name="templateCode" class="layui-input" value="{$list.templateCode|default=''}">
+          <tip>阿里云短信模板code。</tip>
+        </div>
+      </div>
+      <div class="layui-form-item">
+        <label class="layui-form-label required">app_id</label>
+        <div class="layui-input-block flex">
+          <input type="text" name="app_id" class="layui-input" value="{$list.app_id|default=''}">
+          <tip>微信公众号app_id。</tip>
+        </div>
+      </div>
+      <div class="layui-form-item">
+        <label class="layui-form-label required">secret</label>
+        <div class="layui-input-block flex">
+          <input type="text" name="secret" class="layui-input" value="{$list.secret|default=''}">
+          <tip>微信公众号secret。</tip>
+        </div>
+      </div>
+      <div class="layui-form-item">
+        <label class="layui-form-label required">token</label>
+        <div class="layui-input-block flex">
+          <input type="text" name="token" class="layui-input" value="{$list.token|default=''}">
+          <tip>微信公众号验证token。</tip>
+        </div>
+      </div>
+      <div class="layui-form-item">
+        <label class="layui-form-label required">Encoding</label>
+        <div class="layui-input-block flex">
+          <input type="text" name="aes_key" class="layui-input" value="{$list.aes_key|default=''}">
+          <tip>微信公众号EncodingAESKey，一般不填，兼容与安全模式下请一定要填写！！！</tip>
+        </div>
+      </div>
+      <div class="layui-form-item">
+        <label class="layui-form-label required">模板信息ID</label>
+        <div class="layui-input-block flex">
+          <input type="text" name="template_id" class="layui-input" value="{$list.template_id|default=''}">
+          <tip>模板信息ID</tip>
+        </div>
+      </div>
+      <div class="layui-form-item">
+        <label class="layui-form-label required">小程序appid</label>
+        <div class="layui-input-block flex">
+          <input type="text" name="miniprogram_appid" class="layui-input" value="{$list.miniprogram_appid|default=''}">
+          <tip>小程序appid</tip>
+        </div>
+      </div>
+      <div class="layui-form-item">
+        <label class="layui-form-label required">回调地址</label>
+        <div class="layui-input-block flex">
+          <input type="text" name="redirect_url" class="layui-input" value="{$list.redirect_url|default=''}">
+          <tip>回调地址(即h5访问地址)。</tip>
+        </div>
+      </div>
+      <div class="layui-form-item">
+        <label class="layui-form-label required">短信宝账号</label>
+        <div class="layui-input-block flex">
+          <input type="text" name="sms_user" class="layui-input" value="{$list.sms_user|default=''}">
+          <tip>短信宝账号。</tip>
+        </div>
+      </div>
+      <div class="layui-form-item">
+        <label class="layui-form-label required">短信宝密码</label>
+        <div class="layui-input-block flex">
+          <input type="text" name="sms_pwd" class="layui-input" value="{$list.sms_pwd|default=''}">
+          <tip>短信宝密码。</tip>
+        </div>
+      </div>
+      <div class="layui-form-item text-center">
+        <button type="submit" class="layui-btn layui-btn-normal layui-btn-sm" lay-submit>确认</button>
+        <button type="reset" class="layui-btn layui-btn-primary layui-btn-sm">重置</button>
+      </div>
+    </form>
+  </div>
+</div>

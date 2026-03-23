@@ -1,0 +1,119 @@
+<link rel="stylesheet" href="__STATIC__/admin/css/welcome.css?v={:time()}" media="all">
+<div class="layuimini-container">
+    <div class="layuimini-main">
+        <div class="layui-row layui-col-space15">
+            <div class="layui-col-md24">
+                <div class="layui-row layui-col-space15">
+<!--                    <div class="layui-col-md24">-->
+                        <div class="layui-card">
+                            <div class="layui-card-header">
+                                <i class="fa fa-warning icon"></i>
+                                数据统计
+                                <div class="layui-inline">
+                                    <label class="layui-form-label">范围</label>
+                                    <div class="layui-input-inline">
+                                        <input type="date" id="start" name="start" placeholder="start" autocomplete="off" class="layui-input">
+                                    </div>——
+<!--                                    <div class="layui-form-mid">-</div>-->
+                                    <div class="layui-input-inline">
+                                        <input type="date" id="end" name="end" placeholder="end" autocomplete="off" class="layui-input">
+                                    </div>
+                                    <button type="button" id="cx" class="layui-btn layui-btn-normal">查询</button>
+                                </div>
+                            </div>
+                            <div class="layui-card-body">
+                                <div class="welcome-module">
+                                    <div class="layui-row layui-col-space10">
+                                        <div class="layui-col-xs3">
+                                            <div class="panel layui-bg-number">
+                                                <div class="panel-body">
+                                                    <div class="panel-title">
+                                                        <span class="label pull-right layui-bg-blue">实时</span>
+                                                        <h5>今日安装数</h5>
+                                                    </div>
+                                                    <div class="panel-content">
+                                                        <h1 class="no-margins" id="jraz"></h1>
+<!--                                                        <small>当前分类总记录数</small>-->
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="layui-col-xs3">
+                                            <div class="panel layui-bg-number">
+                                                <div class="panel-body">
+                                                    <div class="panel-title">
+                                                        <span class="label pull-right layui-bg-cyan">实时</span>
+                                                        <h5>在线人数</h5>
+                                                    </div>
+                                                    <div class="panel-content">
+                                                        <h1 class="no-margins" id="zxrs"></h1>
+<!--                                                        <small>当前分类总记录数</small>-->
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="layui-col-xs3">
+                                            <div class="panel layui-bg-number">
+                                                <div class="panel-body">
+                                                    <div class="panel-title">
+                                                        <span class="label pull-right layui-bg-orange">实时</span>
+                                                        <h5>总安装数</h5>
+                                                    </div>
+                                                    <div class="panel-content">
+                                                        <h1 class="no-margins" id="zazs"></h1>
+<!--                                                        <small>当前分类总记录数</small>-->
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="layui-col-xs3">
+                                            <div class="panel layui-bg-number">
+                                                <div class="panel-body">
+                                                    <div class="panel-title">
+                                                        <span class="label pull-right layui-bg-green">实时</span>
+                                                        <h5>当日安装数</h5>
+                                                    </div>
+                                                    <div class="panel-content">
+                                                        <h1 class="no-margins" id="draz"></h1>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div>
+                                    <table class="layui-table">
+                                        <!--<colgroup>
+                                            <col width="150">
+                                            <col width="200">
+                                            <col>
+                                        </colgroup>-->
+                                        <thead>
+                                        <tr>
+                                            <th>用户ID</th>
+                                            <th>用户昵称</th>
+                                            <th>真实姓名</th>
+                                            <th>手机号</th>
+                                            <th>登录IP</th>
+                                        </tr>
+                                        </thead>
+                                        <tbody>
+                                            {foreach $loginlist as $v}
+                                            <tr>
+                                                <td>{$v.id}</td>
+                                                <td>{$v.nickname}</td>
+                                                <td>{$v.realname | default='未实名认证'}</td>
+                                                <td>{$v.phone  | default='未绑定手机'}</td>
+                                                <td>{$v.ip}</td>
+                                            </tr>
+                                            {/foreach}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

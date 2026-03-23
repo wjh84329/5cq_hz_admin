@@ -1,0 +1,9 @@
+version: 1.0.2
+files:
+  - url: 5cqbox-1.0.2-setup.exe
+    sha512: FkTx000xbehW6NpwEjAqxvqO8NNy9bFUJYFcydeOouNXawCzBnAW0nbDp/6rgLW/MK27BZOp4fd1Tpvcqzcd6Q==
+    size: 122391522
+path: 5cqbox-1.0.2-setup.exe
+sha512: FkTx000xbehW6NpwEjAqxvqO8NNy9bFUJYFcydeOouNXawCzBnAW0nbDp/6rgLW/MK27BZOp4fd1Tpvcqzcd6Q==
+releaseNotes: 兼容win7,修复文件解压报错,修复扫描快捷键的无效|登录改造，无需次次扫码
+releaseDate: '2024-10-25T17:32:32.092Z'

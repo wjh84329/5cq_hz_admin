@@ -1,0 +1,154 @@
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>5cq盒子官网 -- 传奇玩家必备的找服神器</title>
+    <meta name="keywords" content="传奇私服,新开传奇私服,传奇世界私服,热血传奇私服,新开传奇网站,单职业传奇私服发布网,复古传奇sf" />
+    <meta name="description" content="5cq盒子发布最新传奇私服、新开传奇网站、传奇世界私服、传奇sf等相关热门活动信息，为玩家提供单职业热血传奇私服和复古传奇私服发布网与传奇新开网站信息。" />
+    <link rel="stylesheet" href="./static/users/css/all.css">
+    <script src="./static/js/jquery-1.9.1.js"></script>
+</head>
+
+<body>
+<div class="box1">
+    <!-- 盒子头部 -->
+    <div class="hezi_header">
+        <div class="hezi_width">
+            <img src="./static/users/images/144.png" alt="">
+            <span>玩正版品牌传奇就上 5CQ</span>
+        </div>
+    </div>
+    <!-- 盒子bannar -->
+    <div class="bannar1">
+        <div class="bannar_main">
+            <img src="./static/users/images/four.png" alt="">
+            <div class="bannar_text">
+                <img src="./static/users/images/hezi.png" alt="" class="title_img">
+                <div class="bannar_img"><img src="./static/users/images/tian.png" alt=""> <a href="#">下载盒子和<span
+                        title='言语科技' id="aaa">言语科技</span>一起攻沙</a></div>
+                <p>
+                    <a id="exe" href="https://hz.5cq.com/5cqbox-setup.exe"
+                       class="down_a"><img src="./static/users/images/down.png" alt="">安装包下载</a>
+                    <a id="zip" href="https://hz.5cq.com/5cqbox-setup.exe" class="down_z"><img
+                            src="./static/users/images/zip.png" alt="">绿色版下载</a>
+                </p>
+            </div>
+        </div>
+    </div>
+    <!-- 盒子功能解释 -->
+    <div class="main1">
+        <div class="three_dec animate__animated animate__fadeInUp animate__delay-1s">
+            <div class="three_sprite1">
+                <div class="sprite"></div>
+                <h4>害怕游戏被劫持？</h4>
+                <p>5cq盒子完善的防劫持系统，能够解决游戏中遇到的各种劫持，保障游戏安全运行</p>
+            </div>
+            <div class="three_sprite2">
+                <div class="sprite"></div>
+                <h4>害怕游戏带有病毒？</h4>
+                <p>5cq盒子服务器资源优质绿色，横扫病毒，让你尽情玩乐</p>
+            </div>
+            <div class="three_sprite3">
+                <div class="sprite"></div>
+                <h4>自己玩没意思？</h4>
+                <p>盒子内置玩家社交功能，玩家们可以在客户端直接进行交流沟通与组队游戏，与千万玩家一起创造“传奇”</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="three_bottom" style="">
+        <div class="line animate__animated animate__fadeInUp animate__delay-2s"></div>
+        <h3 class="animate__animated animate__fadeInUp">5cq盒子是玩家的聚集地</h3>
+        <p class="animate__animated animate__fadeInUp">你不是一个人在战斗，享受团队的乐趣，真正给予玩家独一无二的游戏体验。</p>
+    </div>
+</div>
+<!-- 底部 -->
+<footer>
+    <div class="foot_top">
+        <ul class="clearfix">
+        </ul>
+    </div>
+    <div class="foot_bottom">
+        <p>本站关键词:传奇私服,传奇sf,新开传奇私服,最新传奇私服,传奇世界私服,热血传奇私服,新开传奇网站,传奇新开网站,单职业,复古,私服传奇,好私服,5cq服,传奇私服发布网</p>
+        <p>5cq盒子拥有“热血传奇”正版授权，任何对5cq服攻击、劫持、诋毁等不法行为均属违法，欢迎举报提供线索，我方将配合执法部门打击和追究法律责任</p>
+        <p>滇ICP备2023001230号</p>
+    </div>
+</footer>
+<!-- 扫码登录 -->
+<div class="el_title_bg1 el_tips1">
+    <div class="el_title_box1">
+        <div class="el_title1">
+            <h3>您的好友【<span id="user_name"></span>】邀您一起玩游戏</h3>
+            <img src="./static/users/images/bj.png" alt="" id="qrs">
+            <p>微信扫码登录一起玩</p>
+        </div>
+    </div>
+</div>
+
+
+</body>
+<script>
+    $(document).ready(function () {
+        var origin   = window.location.origin;
+        $('#exe').attr('href',origin+'/5cq/5cq.exe');
+        $('#zip').attr('href',origin+'/5cq/5cq.zip');
+        console.log(origin)
+        //a获取用户信息
+        $.ajax({
+            type:'post',
+                url:origin+'/cq/user/get_info',
+                dataType: "json",
+                data:{
+                  'id':getUrlParam('up_id')||'',
+                },
+                success:function (res){
+                    console.log(res)
+                    $('#user_name').text(res.nickname)
+                    $('#aaa').text(res.nickname)
+                }
+        })
+        //获取二维码
+        $.ajax({
+            type:'post',
+            url:origin+'/cq/user/qrcode',
+            dataType: "json",
+            success:function (res){
+                if(res.code==200){
+                    $('#qrs').attr('src',res.data);
+                    var timer;
+                    timer = setInterval(function () {
+                        $.ajax({
+                            type:'post',
+                            url:origin+'/cq/user/get_user_info',
+                            data:{
+                              'key':res.key,
+                              'up_id':getUrlParam('up_id') || '',
+                            },
+                            dataType: "json",
+                            success:function (res){
+                                if(res.code==200){
+                                    $('.el_title_bg1').hide();
+                                    console.log(res.data)
+                                    clearInterval(timer);
+                                }
+                            }
+                        })
+                    },1000)
+                }
+            }
+        })
+    })
+    //获取url中的参数
+    function getUrlParam(name) {
+        var reg = new RegExp("(^|&)" + name + "=([^&]*)(&|$)"); //构造一个含有目标参数的正则表达式对象
+        var r = window.location.search.substr(1).match(reg);  //匹配目标参数
+        if (r != null) return unescape(r[2]);
+        return null; //返回参数值
+    }
+</script>
+
+</html>
