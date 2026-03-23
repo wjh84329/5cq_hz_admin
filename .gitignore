@@ -2,6 +2,7 @@
 .vscode
 *.log
 .env
+*.rar
 config/install/lock/install.lock
 public/upload
 public/docs
