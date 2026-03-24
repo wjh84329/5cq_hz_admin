@@ -1298,4 +1298,39 @@ class Kill extends BaseController
             ],
         ]);
     }
+
+    /**
+     * 获取 coin_info 最新100条，并随机返回10条
+     */
+    public function latest_coin_random_list()
+    {
+        // 先取最新100条
+        $rows = Db::table('coin_info')
+            ->order('id desc')
+            ->limit(100)
+            ->select()
+            ->toArray();
+
+        if (empty($rows)) {
+            return json([
+                'code' => 200,
+                'msg' => '成功',
+                'data' => [
+                    'rows' => [],
+                ],
+            ]);
+        }
+
+        // 随机打散，再取前10条
+        shuffle($rows);
+        $picked = array_slice($rows, 0, 10);
+
+        return json([
+            'code' => 200,
+            'msg' => '成功',
+            'data' => [
+                'rows' => $picked,
+            ],
+        ]);
+    }
 }
