@@ -1176,6 +1176,9 @@ class Kill extends BaseController
             'msg' => '成功',
             'data' => [
                 'consume_coin' => max(0, (int)($killCfg['consume_coin'] ?? 0)),
+                'start_btn_image' => $killCfg['start_btn_image'], 
+                'start_btn_bg' => $killCfg['start_btn_bg'], 
+                'monster_bg' => $killCfg['monster_bg']
             ],
         ]);
     }
