@@ -1048,53 +1048,91 @@ class Yx extends BaseController
      *     )
      * )
      */
-    public function getGameList(){
+    public function getGameList()
+    {
         $data = $this->request->param();
-        if(array_key_exists('name',$data)){
-            $where['name'] = $data['name'];
-        }else{
+
+        $page = max(1, (int)$this->request->param('pageNum', 1));
+        $count = max(1, min(100, (int)$this->request->param('pageSize', 20)));
+
+        if (array_key_exists('name', $data)) {
+            $where['name'] = trim((string)$data['name']);
+        } else {
             $where['name'] = '';
         }
+
+        $openId = isset($data['open_id']) ? (string)$data['open_id'] : '';
+
         $data1 = Db::table('xftj')
-            ->where('show',1)
-            ->whereTime('startTime','<=',date('Y-m-d H:i:s'))
-            ->whereTime('expiresTime','>=',date('Y-m-d H:i:s'))
-            ->where('state',0)
-            ->where(function ($query)use ($where){
-                $query->where('serverName', 'like', '%'.$where['name'].'%')
-                    ->whereOr('serverIp', 'like', '%'.$where['name'].'%')
-                    ->whereOr('openTime', 'like', '%'.$where['name'].'%')
-                    ->whereOr('QQ', 'like', '%'.$where['name'].'%')
-                    ->whereOr('route', 'like', '%'.$where['name'].'%')
-                    ->whereOr('version', 'like', '%'.$where['name'].'%')
-                    ->whereOr('homeUrl', 'like', '%'.$where['name'].'%');
+            ->where('show', 1)
+            ->whereTime('startTime', '<=', date('Y-m-d H:i:s'))
+            ->whereTime('expiresTime', '>=', date('Y-m-d H:i:s'))
+            ->where('state', 0)
+            ->where(function ($query) use ($where) {
+                $query->where('serverName', 'like', '%' . $where['name'] . '%')
+                    ->whereOr('serverIp', 'like', '%' . $where['name'] . '%')
+                    ->whereOr('openTime', 'like', '%' . $where['name'] . '%')
+                    ->whereOr('QQ', 'like', '%' . $where['name'] . '%')
+                    ->whereOr('route', 'like', '%' . $where['name'] . '%')
+                    ->whereOr('version', 'like', '%' . $where['name'] . '%')
+                    ->whereOr('homeUrl', 'like', '%' . $where['name'] . '%');
             })
-            ->select()->toArray();
+            ->select()
+            ->toArray();
+
         shuffle($data1);
         $list1 = $this->morelist($data1);
+
         $data2 = Db::table('xftj')
-            ->where('show',0)
-            ->whereTime('startTime','<=',date('Y-m-d H:i:s'))
-            ->whereTime('expiresTime','>=',date('Y-m-d H:i:s'))
-            ->where('state',0)
-            ->where(function ($query)use ($where){
-                $query->where('serverName', 'like', '%'.$where['name'].'%')
-                    ->whereOr('serverIp', 'like', '%'.$where['name'].'%')
-                    ->whereOr('openTime', 'like', '%'.$where['name'].'%')
-                    ->whereOr('QQ', 'like', '%'.$where['name'].'%')
-                    ->whereOr('route', 'like', '%'.$where['name'].'%')
-                    ->whereOr('version', 'like', '%'.$where['name'].'%')
-                    ->whereOr('homeUrl', 'like', '%'.$where['name'].'%');;
+            ->where('show', 0)
+            ->whereTime('startTime', '<=', date('Y-m-d H:i:s'))
+            ->whereTime('expiresTime', '>=', date('Y-m-d H:i:s'))
+            ->where('state', 0)
+            ->where(function ($query) use ($where) {
+                $query->where('serverName', 'like', '%' . $where['name'] . '%')
+                    ->whereOr('serverIp', 'like', '%' . $where['name'] . '%')
+                    ->whereOr('openTime', 'like', '%' . $where['name'] . '%')
+                    ->whereOr('QQ', 'like', '%' . $where['name'] . '%')
+                    ->whereOr('route', 'like', '%' . $where['name'] . '%')
+                    ->whereOr('version', 'like', '%' . $where['name'] . '%')
+                    ->whereOr('homeUrl', 'like', '%' . $where['name'] . '%');
             })
-            ->select()->toArray();
+            ->select()
+            ->toArray();
+
         shuffle($data2);
         $list2 = $this->morelist($data2);
-        $list = array_merge($list1,$list2);
-        foreach ( $list as &$item){
-            $item['collect'] = Db::table('collect')->where('open_id',$data['open_id'])->where('sID',$item['id'])->findOrEmpty()?1:2;
-            $item['homeUrl'] = 'https://www.5cq.com/go.html?u='.$item['homeUrl'];
+
+        $list = array_merge($list1, $list2);
+
+        $total = count($list);
+        $lastPage = $total > 0 ? (int)ceil($total / $count) : 1;
+        $offset = ($page - 1) * $count;
+        $pageList = array_slice($list, $offset, $count);
+
+        foreach ($pageList as &$item) {
+            if ($openId !== '') {
+                $item['collect'] = Db::table('collect')
+                    ->where('open_id', $openId)
+                    ->where('sID', $item['id'])
+                    ->findOrEmpty() ? 1 : 2;
+            } else {
+                $item['collect'] = 2;
+            }
+
+            $item['homeUrl'] = 'https://www.5cq.com/go.html?u=' . $item['homeUrl'];
         }
-        return json(['code'=>200,'msg'=>'游戏列表','data'=>$list]);
+        unset($item);
+
+        return json([
+            'code' => 200,
+            'msg' => '游戏列表',
+            'data' => $pageList,
+            'page' => $page,
+            'count' => $count,
+            'total' => $total,
+            'last_page' => $lastPage,
+        ]);
     }
     //打乱顺序重新排序
     public function ssssss($data){
