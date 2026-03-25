@@ -1344,4 +1344,22 @@ class Kill extends BaseController
             ],
         ]);
     }
+
+    //查询当日某类型的金币记录（如网页浏览宝箱）
+    public function SelectCoinInfoOne(){
+        $data['type'] = $this->request->param('type');
+        $data['open_id'] = $this->request->param('open_id');
+        //查新今天是否有对应类型的金币记录
+        $result = Db::table('coin_info')
+            ->where('type', $data['type'])
+            ->where('open_id', $data['open_id'])
+            ->where('updata_time', '>=', strtotime(date('Y-m-d 00:00:00')))
+            ->where('updata_time', '<=', strtotime(date('Y-m-d 23:59:59')))
+            ->findOrEmpty();
+        return json([
+            'code' => 200,
+            'msg' => '成功',
+            'data' => $result,
+        ]);
+    }
 }
