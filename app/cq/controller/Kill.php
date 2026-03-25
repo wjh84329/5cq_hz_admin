@@ -1306,6 +1306,7 @@ class Kill extends BaseController
     {
         // 先取最新100条
         $rows = Db::table('coin_info')
+            ->where('coin_num',">",0)
             ->order('id desc')
             ->limit(100)
             ->select()
