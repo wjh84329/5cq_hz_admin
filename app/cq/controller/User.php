@@ -1203,6 +1203,54 @@ class User extends BaseController
                 $data['tz_type'] = 2;
                 $data['title'] = '竞猜奖励';
                 break;
+            case 42:    //白银宝箱
+                $info = Db::table('coin_info')->where('open_id',$data['open_id'])->where('fs','白银宝箱')->whereTime('updata_time','today')->findOrEmpty();
+                if(empty($info)){
+                    $coin = explode('-',$operation_info['boxCoin30']);
+                    $data['coin_num'] = rand($coin[0],$coin[1])/2;
+                    $data['fs'] = '网页白银宝箱';
+                    $data['code'] = 0;
+                    $data['title'] = '网页白银宝箱';
+                }else{
+                    $data['bylq'] = 1;
+                }
+                break;
+            case 43:    //黄金宝箱
+                $info = Db::table('coin_info')->where('open_id',$data['open_id'])->where('fs','黄金宝箱')->whereTime('updata_time','today')->findOrEmpty();
+                if(empty($info)){
+                    $coin = explode('-',$operation_info['boxCoin60']);
+                    $data['coin_num'] = rand($coin[0],$coin[1])/2;
+                    $data['fs'] = '网页黄金宝箱';
+                    $data['code'] = 0;
+                    $data['title'] = '网页黄金宝箱';
+                }else{
+                    $data['hjlq'] = 1;
+                }
+                break;
+            case 44:    //铂金宝箱
+                $info = Db::table('coin_info')->where('open_id',$data['open_id'])->where('fs','铂金宝箱')->whereTime('updata_time','today')->findOrEmpty();
+                if(empty($info)){
+                    $coin = explode('-',$operation_info['boxCoin120']);
+                    $data['coin_num'] = rand($coin[0],$coin[1])/2;
+                    $data['fs'] = '网页铂金宝箱';
+                    $data['code'] = 0;
+                    $data['title'] = '网页铂金宝箱';
+                }else{
+                    $data['bjlq'] = 1;
+                }
+                break;
+            case 45:    //钻石宝箱
+                $info = Db::table('coin_info')->where('open_id',$data['open_id'])->where('fs','钻石宝箱')->whereTime('updata_time','today')->findOrEmpty();
+                if(empty($info)){
+                    $coin = explode('-',$operation_info['boxCoin240']);
+                    $data['coin_num'] = rand($coin[0],$coin[1])/2;
+                    $data['fs'] = '网页钻石宝箱';
+                    $data['code'] = 0;
+                    $data['title'] = '网页钻石宝箱';
+                }else{
+                    $data['zslq'] = 1;
+                }
+                break;
         }
 
         return $data;
