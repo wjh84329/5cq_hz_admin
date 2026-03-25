@@ -1327,7 +1327,7 @@ class Kill extends BaseController
         $result = [];
         $picked = array_slice($rows, 0, 10);
         foreach ($picked as $k => $v) {
-            $user = Db::table('ul_order_user')->where('openid', $v['open_id'])->find();
+            $user = Db::table('ul_order_user')->where('open_id', $v['open_id'])->find();
             if($v['code'] == 0){
                 $result[$k] = '用户' . $user['nickname'] . '通过' . $v['fs'] . '获得了' . $v['coin_num'] . '金币';
             }else{
