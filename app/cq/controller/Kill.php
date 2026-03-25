@@ -1323,13 +1323,23 @@ class Kill extends BaseController
 
         // 随机打散，再取前10条
         shuffle($rows);
+        $result = [];
         $picked = array_slice($rows, 0, 10);
+        foreach ($picked as $k => $v) {
+            $user = Db::table('ul_order_user')->where('openid', $v['open_id'])->first();
+            if($v['code'] == 0){
+                $result[$k] = '用户' . $user['nickname'] . '通过' . $v['fs'] . '获得了' . $v['coin_num'] . '金币';
+            }else{
+                $result[$k] = '用户'. $user['nickname'] . '通过' . $v['fs'] . '消耗' . $v['coin_num'] . '金币';
+            }
+
+        }
 
         return json([
             'code' => 200,
             'msg' => '成功',
             'data' => [
-                'rows' => $picked,
+                'rows' => $result,
             ],
         ]);
     }
