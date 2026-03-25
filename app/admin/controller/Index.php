@@ -48,9 +48,15 @@ class Index extends AdminController
         $keys = $redis->keys($prefix.'*');
         $list = [];
         //去除user_前缀
-        foreach ($keys as $k=>$v){
-            $open_id= substr($v,5);
-            $list[$k] = Db::table('ul_order_user')->where('open_id',$open_id)->findOrEmpty();
+        foreach ($keys as $v) {
+            $open_id = substr($v, 5);
+            $user = Db::table('ul_order_user')->where('open_id', $open_id)->find();
+
+            if (empty($user)) {
+                continue;
+            }
+
+            $list[] = $user;
         }
         return $this->fetch('welcome',['user_count'=>$user_count,'goods_count'=>$goods_count,'order_count'=>$order_count,'loginlist'=>$list]);
     }
