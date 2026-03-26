@@ -586,6 +586,36 @@ class Kill extends BaseController
     }
 
     /**
+     * 随机本次掉落物品个数
+     * 概率分布：
+     * 1个 35%
+     * 2个 30%
+     * 3个 18%
+     * 4个 10%
+     * 5个 7%
+     */
+    private function pickRewardCount(int $maxAvailable): int
+    {
+        $maxAvailable = max(1, min(5, $maxAvailable));
+
+        $rand = mt_rand(1, 100);
+
+        if ($rand <= 35) {
+            $count = 1;
+        } elseif ($rand <= 65) {
+            $count = 2;
+        } elseif ($rand <= 83) {
+            $count = 3;
+        } elseif ($rand <= 93) {
+            $count = 4;
+        } else {
+            $count = 5;
+        }
+
+        return min($count, $maxAvailable);
+    }
+
+    /**
      * 打怪抽奖接口
      * 入参:
      * open_id 用户open_id
@@ -682,38 +712,49 @@ class Kill extends BaseController
             return json(['code' => 0, 'msg' => '该怪物未配置掉落物品']);
         }
 
-        // 从奖池随机抽取5次，允许重复，后续去重
+        // 本次随机掉落 1-5 个物品，且相同物品只能出现一次
         $draws = [];
-        for ($i = 0; $i < 5; $i++) {
-            $picked = $this->weightedPick($dropPool);
+        $availablePool = array_values($dropPool);
+        $drawCount = $this->pickRewardCount(count($availablePool));
+
+        for ($i = 0; $i < $drawCount; $i++) {
+            if (empty($availablePool)) {
+                break;
+            }
+
+            $picked = $this->weightedPick($availablePool);
             $itemId = (int)($picked['item_id'] ?? 0);
             $minNum = max(1, (int)($picked['min_num'] ?? 1));
             $maxNum = max($minNum, (int)($picked['max_num'] ?? 1));
             $dropNum = mt_rand($minNum, $maxNum);
+
             $draws[] = [
                 'item_id' => $itemId,
                 'num' => $dropNum,
                 'probability' => (int)($picked['probability'] ?? 0),
             ];
-        }
 
-        // 去重：相同item_id累加数量
-        $mergedDraws = [];
-        foreach ($draws as $draw) {
-            $itemId = $draw['item_id'];
-            if (!isset($mergedDraws[$itemId])) {
-                $mergedDraws[$itemId] = $draw;
-            } else {
-                $mergedDraws[$itemId]['num'] += $draw['num'];
+            // 已抽中的物品从候选池移除，保证一次抽奖中同物品不会重复出现
+            foreach ($availablePool as $index => $poolItem) {
+                if ((int)($poolItem['item_id'] ?? 0) === $itemId) {
+                    unset($availablePool[$index]);
+                    break;
+                }
             }
+
+            $availablePool = array_values($availablePool);
         }
 
         // 查询物品配置
-        $itemIds = array_keys($mergedDraws);
+        $itemIds = array_values(array_unique(array_map(function ($draw) {
+            return (int)($draw['item_id'] ?? 0);
+        }, $draws)));
+
         $itemRows = Db::table('hz_kill_wp')
             ->whereIn('id', $itemIds)
             ->select()
             ->toArray();
+
         $itemMap = [];
         foreach ($itemRows as $row) {
             $itemMap[(int)$row['id']] = $row;
@@ -750,12 +791,15 @@ class Kill extends BaseController
             // 2) 入背包 + 背包流水
             $bagResults = [];
             $rewards = [];
-            foreach ($mergedDraws as $itemId => $draw) {
+            foreach ($draws as $draw) {
+                $itemId = (int)$draw['item_id'];
+
                 if (!isset($itemMap[$itemId])) {
                     throw new \Exception("物品配置不存在 item_id={$itemId}");
                 }
+
                 $item = $itemMap[$itemId];
-                $bagResult = $this->addItemToBag($user, $item, $draw['num'], 'kill_draw', 0);
+                $bagResult = $this->addItemToBag($user, $item, (int)$draw['num'], 'kill_draw', 0);
                 $bagResults[] = $bagResult;
                 $rewards[] = [
                     'item_id' => (int)$item['id'],
@@ -763,8 +807,8 @@ class Kill extends BaseController
                     'item_images' => $this->cleanUtf8((string)$item['images']),
                     'value_min' => (float)($item['value_min'] ?? 0),
                     'value_max' => (float)($item['value_max'] ?? 0),
-                    'num' => $draw['num'],
-                    'probability' => $draw['probability'],
+                    'num' => (int)$draw['num'],
+                    'probability' => (int)$draw['probability'],
                 ];
             }
 
