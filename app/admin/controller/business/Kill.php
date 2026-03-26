@@ -457,4 +457,41 @@ class Kill extends AdminController
         $ok = Db::table('ul_kill_gw_item')->delete($id);
         return json($ok ? ['code' => 1, 'msg' => '删除成功'] : ['code' => 0, 'msg' => '删除失败']);
     }
+
+    /**
+     * @NodeAnotation(title="修改物品属性")
+     */
+    public function modify_wp($id)
+    {
+        $field = (string)$this->request->param('field', '');
+        $value = (float)$this->request->param('value', 0);
+
+        if (!in_array($field, ['value_min', 'value_max'])) {
+            $this->error('不允许修改该字段');
+        }
+
+        if ($value < 0) {
+            $this->error('价值不能为负数');
+        }
+
+        $row = Db::table('hz_kill_wp')->find($id);
+        if (!$row) {
+            $this->error('数据不存在');
+        }
+
+        $newMin = $field === 'value_min' ? $value : (float)$row['value_min'];
+        $newMax = $field === 'value_max' ? $value : (float)$row['value_max'];
+
+        if ($newMin > $newMax) {
+            $this->error('价值区间不正确');
+        }
+
+        $ok = Db::table('hz_kill_wp')
+            ->where('id', $id)
+            ->update([
+                $field => $value,
+            ]);
+
+        $ok !== false ? $this->success('保存成功') : $this->error('保存失败');
+    }
 }

@@ -27,7 +27,8 @@ define(["jquery", "easy-admin"], function ($, ea) {
         index_url: 'business.kill/open_wplist',
         add_url: 'business.kill/add_wp',
         edit_url: 'business.kill/edit_wp',
-        delete_url: 'business.kill/delete_wp'
+        delete_url: 'business.kill/delete_wp',
+        modify_url: 'business.kill/modify_wp'
     };
 
     var drop_init = {
@@ -160,8 +161,8 @@ define(["jquery", "easy-admin"], function ($, ea) {
                     { field: 'id', width: 80, title: 'ID' },
                     { field: 'title', minWidth: 160, title: '物品名称' },
                     { field: 'images', minWidth: 120, title: '物品图片', search: false, templet: ea.table.image },
-                    { field: 'value_min', width: 110, title: '价值下限' },
-                    { field: 'value_max', width: 110, title: '价值上限' },
+                    { field: 'value_min', width: 110, title: '价值下限', edit: 'text' },
+                    { field: 'value_max', width: 110, title: '价值上限', edit: 'text' },
                     {
                         field: 'value_range',
                         minWidth: 140,
@@ -188,7 +189,8 @@ define(["jquery", "easy-admin"], function ($, ea) {
                 ]],
             });
 
-            ea.listen();
+            ea.table.listenEdit(wp_init, 'currentTable', wp_init.table_render_id, true);
+ea.listen();
         },
 
         monster_items: function () {
