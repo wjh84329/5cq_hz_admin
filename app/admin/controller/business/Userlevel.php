@@ -28,22 +28,74 @@ class Userlevel extends AdminController
             if (input('selectFields')) {
                 return $this->selectList();
             }
-            $page = $this->request->param('page');
-            $limit = $this->request->param('limit');
-            $tol=($page-1)*$limit+1;
+
+            $page = (int)$this->request->param('page', 1);
+            $limit = (int)$this->request->param('limit', 10);
+
             $count = Db::table('ul_user_level')->count();
             $list = Db::table('ul_user_level')
                 ->page($page, $limit)
                 ->order($this->sort)
-                ->select();
-            $data = [
+                ->select()
+                ->toArray();
+
+            $levelIds = array_values(array_unique(array_map(function ($row) {
+                return (int)($row['id'] ?? 0);
+            }, $list)));
+
+            $monsterMap = [];
+            if (!empty($levelIds)) {
+                $relRows = Db::table('ul_user_level_kill_gw')
+                    ->whereIn('level_id', $levelIds)
+                    ->order('sort asc, id asc')
+                    ->field('level_id,gw_id')
+                    ->select()
+                    ->toArray();
+
+                $gwIds = array_values(array_unique(array_map(function ($row) {
+                    return (int)($row['gw_id'] ?? 0);
+                }, $relRows)));
+
+                $gwTitleMap = [];
+                if (!empty($gwIds)) {
+                    $gwRows = Db::table('hz_kill_gw')
+                        ->whereIn('id', $gwIds)
+                        ->field('id,title')
+                        ->select()
+                        ->toArray();
+
+                    foreach ($gwRows as $gw) {
+                        $gwId = (int)($gw['id'] ?? 0);
+                        $gwTitleMap[$gwId] = $this->cleanUtf8((string)($gw['title'] ?? ''));
+                    }
+                }
+
+                foreach ($relRows as $row) {
+                    $levelId = (int)($row['level_id'] ?? 0);
+                    $gwId = (int)($row['gw_id'] ?? 0);
+                    $title = $gwTitleMap[$gwId] ?? '';
+                    if ($title === '') {
+                        continue;
+                    }
+                    $monsterMap[$levelId][] = $title;
+                }
+            }
+
+            foreach ($list as &$row) {
+                $levelId = (int)($row['id'] ?? 0);
+                $titles = $monsterMap[$levelId] ?? [];
+                $row['monster_titles'] = empty($titles) ? '未配置' : implode('、', $titles);
+            }
+            unset($row);
+
+            return json([
                 'code'  => 0,
                 'msg'   => '',
                 'count' => $count,
                 'data'  => $list,
-            ];
-            return json($data);
+            ]);
         }
+
         return $this->fetch();
     }
 
