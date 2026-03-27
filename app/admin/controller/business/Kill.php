@@ -23,10 +23,21 @@ class Kill extends AdminController
                 'start_btn_image' => trim((string)$this->request->param('start_btn_image')),
                 'start_btn_bg' => trim((string)$this->request->param('start_btn_bg')),
                 'monster_bg' => trim((string)$this->request->param('monster_bg')),
+                'red_num' => trim((string)$this->request->param('red_num', '0')),
+                'red_probality' => (int)$this->request->param('red_probality', 0),
+                'red_image' => trim((string)$this->request->param('red_image')),
             ];
 
             if ($data['consume_coin'] < 0) {
                 $this->error('消耗金币不能小于0');
+            }
+
+            if ($data['red_probality'] < 0 || $data['red_probality'] > 100) {
+                $this->error('红包概率必须在0-100之间');
+            }
+
+            if ($data['red_num'] === '') {
+                $this->error('红包赠送数量不能为空');
             }
 
             $exists = Db::table('hz_kill')->where('id', 1)->find();

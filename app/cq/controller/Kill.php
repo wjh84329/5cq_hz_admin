@@ -321,6 +321,60 @@ class Kill extends BaseController
         return end($rows);
     }
 
+    private function parseRedAmount(string $redNum): float
+    {
+        $redNum = trim($redNum);
+        if ($redNum === '') {
+            return 0;
+        }
+
+        if (strpos($redNum, '-') !== false) {
+            $parts = explode('-', $redNum, 2);
+            $min = (float)trim($parts[0]);
+            $max = (float)trim($parts[1]);
+
+            if ($min < 0) {
+                $min = 0;
+            }
+            if ($max < $min) {
+                $max = $min;
+            }
+
+            // 红包支持小数，按分计算再除回去
+            return mt_rand((int)round($min * 100), (int)round($max * 100)) / 100;
+        }
+
+        return max(0, (float)$redNum);
+    }
+
+    private function buildRedReward(array $killCfg): array
+    {
+        $probability = max(0, min(100, (int)($killCfg['red_probality'] ?? 0)));
+        $redNum = trim((string)($killCfg['red_num'] ?? '0'));
+        $redImage = $this->cleanUtf8((string)($killCfg['red_image'] ?? ''));
+
+        if ($probability <= 0 || $redNum === '' || $redNum === '0') {
+            return [
+                'hit' => 0,
+                'probability' => $probability,
+                'amount' => 0,
+                'image' => $redImage,
+                'config' => $redNum,
+            ];
+        }
+
+        $hit = mt_rand(1, 100) <= $probability ? 1 : 0;
+        $amount = $hit ? $this->parseRedAmount($redNum) : 0;
+
+        return [
+            'hit' => $hit,
+            'probability' => $probability,
+            'amount' => $amount,
+            'image' => $redImage,
+            'config' => $redNum,
+        ];
+    }
+
     private function cleanUtf8($data)
     {
         if (is_array($data)) {
@@ -694,6 +748,7 @@ class Kill extends BaseController
         // 消耗金币配置
         $killCfg = Db::table('hz_kill')->where('id', 1)->find();
         $consumeCoin = max(0, (int)($killCfg['consume_coin'] ?? 0));
+        $redReward = $this->buildRedReward((array)$killCfg);// 红包奖励
 
         $userCoin = (float)($user['coin_num'] ?? 0);
         if ($consumeCoin > 0 && $userCoin < $consumeCoin) {
@@ -817,6 +872,11 @@ class Kill extends BaseController
             foreach ($rewards as $r) {
                 $dropTitles[] = (string)$r['item_title'] . ' x' . $r['num'];
             }
+
+            if ((int)$redReward['hit'] === 1 && (float)$redReward['amount'] > 0) {
+                $dropTitles[] = '红包 x' . $redReward['amount'];
+            }
+
             $drawLogId = Db::table('coin_info')->insertGetId([
                 'open_id' => $openId,
                 'coin_num' => 0,
@@ -842,15 +902,24 @@ class Kill extends BaseController
                 'code' => 200,
                 'msg' => '抽奖成功',
                 'data' => [
-                    'consume_coin' => $consumeCoin,
+                    'consume_coin' => $consumeCoin,// 本次抽奖消耗金币
+                    // 当前怪物信息
                     'monster' => [
                         'id' => (int)$monster['id'],
                         'title' => $this->cleanUtf8((string)$monster['title']),
                         'images' => $this->cleanUtf8((string)$monster['images']),
                     ],
-                    'rewards' => $rewards,
-                    'bag' => $bagResults,
-                    'user' => $latestUser,
+                    'rewards' => $rewards,// 物品奖励列表
+                    // 红包奖励（如果有的话）
+                    'red_reward' => [
+                        'hit' => (int)$redReward['hit'],
+                        'amount' => (float)$redReward['amount'],
+                        'probability' => (int)$redReward['probability'],
+                        'image' => (string)$redReward['image'],
+                        'config' => (string)$redReward['config'],
+                    ],
+                    'bag' => $bagResults,// 本次抽奖背包变动详情
+                    'user' => $latestUser,// 最新的用户信息，包含剩余金币等
                 ],
             ]);
         } catch (\Throwable $e) {

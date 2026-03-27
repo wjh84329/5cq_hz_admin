@@ -11,6 +11,33 @@
             </div>
 
             <div class="layui-form-item">
+                <label class="layui-form-label required">红包概率</label>
+                <div class="layui-input-inline">
+                    <input type="number" name="red_probality" min="0" max="100" lay-verify="required" class="layui-input" value="{$row.red_probality|default='0'}">
+                </div>
+                <div class="layui-form-mid layui-word-aux">点击一次开始按钮获得红包的概率，概率为百分比，取值范围0-100</div>
+            </div>
+
+            <div class="layui-form-item">
+                <label class="layui-form-label required">红包赠送数量</label>
+                <div class="layui-input-inline">
+                    <input type="text" name="red_num"  lay-verify="required" class="layui-input" value="{$row.red_num|default='0'}">
+                </div>
+                <div class="layui-form-mid layui-word-aux">点击一次开始按钮获得的红包数量,实例1-5表示每次点击获得红包金额为1到5之间的随机数</div>
+            </div>
+
+            <div class="layui-form-item">
+                <label class="layui-form-label">红包图片</label>
+                <div class="layui-input-block layuimini-upload">
+                    <input name="red_image" type="hidden" class="layui-input layui-col-xs6" value="{$row.red_image|default=''}">
+                    <div class="layui-input-inline">
+                        <span><a class="layui-btn" data-upload="red_image" data-upload-number="one" data-upload-exts="*image" data-upload-icon="image"><i class="fa fa-upload"></i> 上传</a></span>
+                        <span><a class="layui-btn layui-btn-normal" id="select_red_image" data-upload-select="red_image" data-upload-number="one" data-upload-mimetype="image/*"><i class="fa fa-list"></i> 选择</a></span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="layui-form-item">
                 <label class="layui-form-label">开始按钮图片</label>
                 <div class="layui-input-block layuimini-upload">
                     <input name="start_btn_image" type="hidden" class="layui-input layui-col-xs6" value="{$row.start_btn_image|default=''}">
