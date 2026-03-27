@@ -1798,7 +1798,7 @@ class Kill extends BaseController
         }
 
         $query = Db::table('ul_user_kill_red_bag')
-            ->field('id,open_id,user_id,gw_id,gw_title,amount,red_image,status,remark,create_time,update_time')
+            ->field('id,open_id,user_id,gw_id,gw_title,amount,red_image,status,remark,yxmc,yxgw,czje,hbmc,czzh,czqf,QQ,is_cz,create_time,update_time')
             ->where('open_id', $openId)
             ->where('status', 2);
 

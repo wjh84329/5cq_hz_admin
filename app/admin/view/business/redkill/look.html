@@ -1,0 +1,46 @@
+<div class="layui-tab-content">
+    <div class="layui-tab-item layui-show">
+        <fieldset class="layui-elem-field">
+            <legend>红包记录详情</legend>
+            <div class="layui-field-box">
+                <div class="layui-row layui-col-space15">
+                    <div class="layui-col-md6">
+                        <div class="layui-card">
+                            <div class="layui-card-header">基础信息</div>
+                            <div class="layui-card-body">
+                                <div>记录ID：{$info.id}</div>
+                                <div>用户ID：{$info.user_id}</div>
+                                <div>OpenID：{$info.open_id|default=''}</div>
+                                <div>怪物ID：{$info.gw_id|default=0}</div>
+                                <div>怪物名称：{$info.gw_title|default=''}</div>
+                                <div>红包金额：{$info.amount}</div>
+                                <div>红包状态：{$info.status_text}</div>
+                                <div>充值状态：{$info.is_cz_text}</div>
+                                <div>发放状态：{$info.grant_status_text}</div>
+                                <div>发放备注：{$info.remark|default='-'}</div>
+                                <div>领取时间：{$info.create_time_text|default=''}</div>
+                                <div>使用时间：{$info.update_time_text|default=''}</div>
+                                <div>发放时间：{$info.grant_time_text|default=''}</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="layui-col-md6">
+                        <div class="layui-card">
+                            <div class="layui-card-header">充值信息</div>
+                            <div class="layui-card-body">
+                                <div>游戏名称：{$info.yxmc|default='-'}</div>
+                                <div>游戏官网：{$info.yxgw|default='-'}</div>
+                                <div>充值金额：{$info.czje|default=0}</div>
+                                <div>货币名称：{$info.hbmc|default='-'}</div>
+                                <div>充值账号：{$info.czzh|default='-'}</div>
+                                <div>充值区服：{$info.czqf|default='-'}</div>
+                                <div>联系QQ：{$info.QQ|default='-'}</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </fieldset>
+    </div>
+</div>

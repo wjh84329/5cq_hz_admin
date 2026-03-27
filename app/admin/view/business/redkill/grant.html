@@ -1,0 +1,48 @@
+<div class="layui-tab-content">
+    <div class="layui-tab-item layui-show">
+        <form id="app-form" class="layui-form">
+            <div class="layui-form-item">
+                <label class="layui-form-label">记录ID</label>
+                <div class="layui-input-block">
+                    <input type="text" value="{$info.id}" class="layui-input" disabled>
+                </div>
+            </div>
+
+            <div class="layui-form-item">
+                <label class="layui-form-label">用户ID</label>
+                <div class="layui-input-block">
+                    <input type="text" value="{$info.user_id}" class="layui-input" disabled>
+                </div>
+            </div>
+
+            <div class="layui-form-item">
+                <label class="layui-form-label">怪物名称</label>
+                <div class="layui-input-block">
+                    <input type="text" value="{$info.gw_title|default=''}" class="layui-input" disabled>
+                </div>
+            </div>
+
+            <div class="layui-form-item">
+                <label class="layui-form-label">红包金额</label>
+                <div class="layui-input-block">
+                    <input type="text" value="{$info.amount}" class="layui-input" disabled>
+                </div>
+            </div>
+
+            <div class="layui-form-item layui-form-text">
+                <label class="layui-form-label">发放备注</label>
+                <div class="layui-input-block">
+                    <textarea name="remark" placeholder="请输入发放备注" class="layui-textarea">{$info.remark|default=''}</textarea>
+                </div>
+                <div class="layui-form-mid layui-word-aux">发放时必须填写备注</div>
+            </div>
+
+            <div class="layui-form-item">
+                <div class="layui-input-block">
+                    <button class="layui-btn" lay-submit lay-filter="formDemo">立即提交</button>
+                    <button type="reset" class="layui-btn layui-btn-primary">重置</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
