@@ -1024,6 +1024,7 @@ class Kill extends BaseController
      */
     public function bag_list()
     {
+        $killCfg = Db::table('hz_kill')->where('id', 1)->find();
         $openId = trim((string)$this->request->param('open_id', ''));
         $page = max(1, (int)$this->request->param('page', 1));
         $limit = (int)$this->request->param('limit', 20);
@@ -1130,6 +1131,7 @@ class Kill extends BaseController
             $redRow['id'] = (int)$redRow['id'];
             $redRow['bag_type'] = 'red';
             $redRow['amount'] = round((float)($redRow['amount'] ?? 0), 2);
+            $redRow['red_image'] = $this->cleanUtf8((string)($killCfg['red_image'] ?? ''));
             $redRow['status'] = (int)($redRow['status'] ?? 1);
             $redRow['gw_id'] = (int)($redRow['gw_id'] ?? 0);
             $redRow['gw_title'] = $this->cleanUtf8((string)($redRow['gw_title'] ?? ''));
