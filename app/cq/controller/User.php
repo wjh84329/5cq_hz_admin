@@ -763,6 +763,7 @@ class User extends BaseController
             $info = Db::table('coin_info')->where('open_id',$data['open_id'])->where('fs','钻石宝箱')->whereTime('updata_time','today')->findOrEmpty();
             return json(['code'=>200,'msg'=>'钻石宝箱今日已领取','coinInfo'=>$info]);
         }
+        
         $data['real'] = $data['coin_num'];
         if($data['code']==0){
             $coount = Db::table('coin_info')->whereTime('updata_time','today')->where('code',0)->where('open_id',$data['open_id'])->sum('coin_num');//今日获得的金币数量
@@ -1251,9 +1252,63 @@ class User extends BaseController
                     $data['zslq'] = 1;
                 }
                 break;
+            case 46://网页分享得金币，每次10个金币，每天最多十次
+                $list = Db::table('coin_info')->where('open_id',$data['open_id'])->where('fs','网页分享得金币')->whereTime('updata_time','today')->select();
+                if(count($list) < 10){
+                    $data['coin_num'] = 10;
+                    $data['fs'] = '网页分享得金币';
+                    $data['code'] = 0;
+                    $data['title'] = '网页分享得金币';
+                }else{
+                    $data['coin_num'] = 0;
+                    $data['fs'] = '网页分享得金币';
+                    $data['code'] = 0;
+                    $data['title'] = '网页分享得金币';
+                    $data['share'] = 1;
+                }
+                break;
         }
 
         return $data;
+    }
+
+    public function setCoinShare(){
+        $data = $this->request->param();
+        $userinfo = Db::table('ul_order_user')->where('id',$data['id'])->findOrEmpty();
+        if(empty($userinfo)){
+            return json(['code'=>0,'msg'=>'用户不存在']);
+        }
+        $list = Db::table('coin_info')->where('open_id',$userinfo['open_id'])->where('fs','网页分享得金币')->whereTime('updata_time','today')->select();
+        if(count($list) < 10){
+            $coinNum = 10;
+
+            $addData = [];
+            $addData['open_id'] = $userinfo['open_id'];
+            $addData['coin_num'] = $coinNum;
+            $addData['real'] = $coinNum;
+            $addData['difference'] = 0;
+            $addData['code'] = 0;
+            $addData['fs'] = '网页分享得金币';
+            $addData['title'] = '网页分享得金币';
+
+            Db::table('ul_order_user')
+                ->where('id', $data['id'])
+                ->inc('coin_num', $coinNum)
+                ->update();
+
+            $insertID = Db::table('coin_info')->insertGetId($addData);
+            $coininfo = Db::table('coin_info')->find($insertID);
+            $user_info = Db::table('ul_order_user')->where('id', $data['id'])->find();
+
+            return json([
+                'code' => 200,
+                'msg' => '成功',
+                'user_info' => $user_info,
+                'coinInfo' => $coininfo
+            ]);
+        }else{
+            return json(['code'=> 0,'msg'=> '今日网页分享得金币次数已达上限']);
+        }
     }
 
     /**

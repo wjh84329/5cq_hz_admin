@@ -1841,4 +1841,26 @@ class Kill extends BaseController
             ],
         ]);
     }
+
+    /**
+     * 查询coin_info表中今日分享次数接口,type为46
+     * 入参:无
+     * 返回: 今日分享次数,总数固定10次
+     */
+    public function today_share_count()
+    {
+        $list = Db::table('coin_info')
+            ->where('type', 46)
+            ->where('updata_time', '>=', strtotime(date('Y-m-d 00:00:00')))
+            ->where('updata_time', '<=', strtotime(date('Y-m-d 23:59:59')))
+            ->select()
+            ->toArray();
+        return json([
+            'code' => 200,
+            'msg' => '成功',
+            'data' => [
+                'today_share_count' => count($list),
+            ],
+        ]);
+    }
 }
