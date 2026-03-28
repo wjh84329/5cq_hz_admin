@@ -1425,6 +1425,16 @@ class User extends BaseController
         return json(['code'=>200,'msg'=>'获取成功','data'=>$list]);
     }
 
+    public function coin_info_today(){
+        $data = $this->request->param();
+        $list = Db::table('coin_info')
+            ->whereDay('updata_time')
+            ->where('fs',$data['fs'])
+            ->where('open_id',$data['open_id'])
+            ->find();
+        return json(['code'=>200,'msg'=>'获取成功','data'=>$list]);
+    }
+
     /**
      * @OA\Post(
      *     path="/cq/user/coin_info_list",
