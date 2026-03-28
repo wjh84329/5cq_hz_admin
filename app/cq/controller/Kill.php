@@ -1849,7 +1849,10 @@ class Kill extends BaseController
      */
     public function today_share_count()
     {
+        $data = $this->request->param();
+        $openId = trim((string)$data['open_id'] ?? '');
         $list = Db::table('coin_info')
+            ->where('open_id', $openId)
             ->where('type', 46)
             ->where('updata_time', '>=', strtotime(date('Y-m-d 00:00:00')))
             ->where('updata_time', '<=', strtotime(date('Y-m-d 23:59:59')))
