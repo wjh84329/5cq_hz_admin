@@ -2,9 +2,16 @@
     <div class="layui-tab-item layui-show">
         <form id="app-form" class="layui-form">
             <div class="layui-form-item">
-                <label class="layui-form-label">记录ID</label>
+                <label class="layui-form-label">记录模式</label>
                 <div class="layui-input-block">
-                    <input type="text" value="{$info.id}" class="layui-input" disabled>
+                    <input type="text" value="{$info.row_mode == 'batch' ? '批次聚合' : '单条记录'}" class="layui-input" disabled>
+                </div>
+            </div>
+
+            <div class="layui-form-item">
+                <label class="layui-form-label">批次号</label>
+                <div class="layui-input-block">
+                    <input type="text" value="{$info.use_batch_no|default='-'}" class="layui-input" disabled>
                 </div>
             </div>
 
@@ -23,7 +30,14 @@
             </div>
 
             <div class="layui-form-item">
-                <label class="layui-form-label">红包金额</label>
+                <label class="layui-form-label">红包个数</label>
+                <div class="layui-input-block">
+                    <input type="text" value="{$info.red_count|default=1}" class="layui-input" disabled>
+                </div>
+            </div>
+
+            <div class="layui-form-item">
+                <label class="layui-form-label">总金额</label>
                 <div class="layui-input-block">
                     <input type="text" value="{$info.amount}" class="layui-input" disabled>
                 </div>
@@ -32,9 +46,9 @@
             <div class="layui-form-item layui-form-text">
                 <label class="layui-form-label">发放备注</label>
                 <div class="layui-input-block">
-                    <textarea name="remark" placeholder="请输入发放备注" class="layui-textarea">{$info.remark|default=''}</textarea>
+                    <textarea name="grant_remark" placeholder="请输入发放备注" class="layui-textarea">{$info.grant_remark|default=''}</textarea>
                 </div>
-                <div class="layui-form-mid layui-word-aux">发放时必须填写备注</div>
+                <div class="layui-form-mid layui-word-aux">发放时必须填写备注，批次发放会同步写入该批次下所有红包</div>
             </div>
 
             <div class="layui-form-item">

@@ -8,19 +8,21 @@
                         <div class="layui-card">
                             <div class="layui-card-header">基础信息</div>
                             <div class="layui-card-body">
+                                <div>记录模式：{$info.row_mode == 'batch' ? '批次聚合' : '单条记录'}</div>
                                 <div>记录ID：{$info.id}</div>
+                                <div>批次号：{$info.use_batch_no|default='-'}</div>
                                 <div>用户ID：{$info.user_id}</div>
                                 <div>OpenID：{$info.open_id|default=''}</div>
-                                <div>怪物ID：{$info.gw_id|default=0}</div>
-                                <div>怪物名称：{$info.gw_title|default=''}</div>
-                                <div>红包金额：{$info.amount}</div>
+                                <div>怪物名称：{$info.gw_title|default='-'}</div>
                                 <div>红包状态：{$info.status_text}</div>
+                                <div>红包个数：{$info.red_count|default=1}</div>
+                                <div>红包总金额：{$info.amount}</div>
                                 <div>充值状态：{$info.is_cz_text}</div>
                                 <div>发放状态：{$info.grant_status_text}</div>
-                                <div>发放备注：{$info.remark|default='-'}</div>
+                                <div>发放备注：{$info.grant_remark|default='-'}</div>
                                 <div>领取时间：{$info.create_time_text|default=''}</div>
-                                <div>使用时间：{$info.update_time_text|default=''}</div>
-                                <div>发放时间：{$info.grant_time_text|default=''}</div>
+                                <div>使用时间：{$info.update_time_text|default='——'}</div>
+                                <div>发放时间：{$info.grant_time_text|default='——'}</div>
                             </div>
                         </div>
                     </div>
@@ -38,6 +40,42 @@
                                 <div>联系QQ：{$info.QQ|default='-'}</div>
                             </div>
                         </div>
+                    </div>
+                </div>
+
+                <div class="layui-card" style="margin-top:15px;">
+                    <div class="layui-card-header">红包明细</div>
+                    <div class="layui-card-body" style="padding:0;">
+                        <table class="layui-table" style="margin:0;">
+                            <thead>
+                            <tr>
+                                <th>记录ID</th>
+                                <th>怪物名称</th>
+                                <th>金额</th>
+                                <th>状态</th>
+                                <th>发放状态</th>
+                                <th>领取时间</th>
+                                <th>使用时间</th>
+                                <th>发放时间</th>
+                                <th>发放备注</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            {volist name="detailRows" id="row"}
+                            <tr>
+                                <td>{$row.id}</td>
+                                <td>{$row.gw_title|default='-'}</td>
+                                <td>{$row.amount}</td>
+                                <td>{$row.status_text}</td>
+                                <td>{$row.grant_status_text}</td>
+                                <td>{$row.create_time_text|default=''}</td>
+                                <td>{$row.update_time_text|default='——'}</td>
+                                <td>{$row.grant_time_text|default='——'}</td>
+                                <td>{$row.grant_remark|default='-'}</td>
+                            </tr>
+                            {/volist}
+                            </tbody>
+                        </table>
                     </div>
                 </div>
             </div>

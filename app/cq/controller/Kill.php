@@ -322,7 +322,7 @@ class Kill extends BaseController
         return end($rows);
     }
 
-    private function parseRedAmount(string $redNum): float
+    private function parseRedAmount(string $redNum): int
     {
         $redNum = trim($redNum);
         if ($redNum === '') {
@@ -331,8 +331,8 @@ class Kill extends BaseController
 
         if (strpos($redNum, '-') !== false) {
             $parts = explode('-', $redNum, 2);
-            $min = (float)trim($parts[0]);
-            $max = (float)trim($parts[1]);
+            $min = (int)trim($parts[0]);
+            $max = (int)trim($parts[1]);
 
             if ($min < 0) {
                 $min = 0;
@@ -341,11 +341,10 @@ class Kill extends BaseController
                 $max = $min;
             }
 
-            // 红包支持小数，按分计算再除回去
-            return mt_rand((int)round($min * 100), (int)round($max * 100)) / 100;
+            return mt_rand($min, $max);
         }
 
-        return max(0, (float)$redNum);
+        return max(0, (int)$redNum);
     }
 
     private function buildRedReward(array $killCfg): array
@@ -1526,7 +1525,7 @@ class Kill extends BaseController
     }
 
     private function addRedToBag(array $user, array $monster, array $redReward, string $bizType, int $bizId = 0): array
-{
+    {
         $openId = (string)($user['open_id'] ?? '');
         $userId = (int)($user['id'] ?? 0);
         $amount = round((float)($redReward['amount'] ?? 0), 2);
@@ -1545,6 +1544,10 @@ class Kill extends BaseController
             'red_image' => (string)($redReward['image'] ?? ''),
             'status' => 1,
             'remark' => '打怪红包入包',
+            'grant_status' => 0,
+            'grant_time' => 0,
+            'grant_remark' => '',
+            'use_batch_no' => '',
             'create_time' => $now,
             'update_time' => $now,
         ]);
@@ -1559,8 +1562,14 @@ class Kill extends BaseController
             'amount' => $amount,
             'red_image' => (string)($redReward['image'] ?? ''),
             'status' => 1,
+            'use_batch_no' => '',
             'create_time' => $now,
         ];
+    }
+
+    private function createUseBatchNo(string $openId): string
+    {
+        return 'RB' . date('YmdHis') . mt_rand(1000, 9999) . substr(md5($openId . microtime(true)), 0, 6);
     }
 
     /**
@@ -1569,6 +1578,11 @@ class Kill extends BaseController
     private function formatRedBagRows(array $rows): array
     {
         foreach ($rows as &$row) {
+            $status = (int)($row['status'] ?? 0);
+            $createTime = (int)($row['create_time'] ?? 0);
+            $updateTime = (int)($row['update_time'] ?? 0);
+            $grantTime = (int)($row['grant_time'] ?? 0);
+
             $row['id'] = (int)($row['id'] ?? 0);
             $row['open_id'] = (string)($row['open_id'] ?? '');
             $row['user_id'] = (int)($row['user_id'] ?? 0);
@@ -1576,8 +1590,9 @@ class Kill extends BaseController
             $row['gw_title'] = $this->cleanUtf8((string)($row['gw_title'] ?? ''));
             $row['amount'] = round((float)($row['amount'] ?? 0), 2);
             $row['red_image'] = $this->cleanUtf8((string)($row['red_image'] ?? ''));
-            $row['status'] = (int)($row['status'] ?? 0);
+            $row['status'] = $status;
             $row['remark'] = $this->cleanUtf8((string)($row['remark'] ?? ''));
+            $row['grant_remark'] = $this->cleanUtf8((string)($row['grant_remark'] ?? ''));
             $row['yxmc'] = $this->cleanUtf8((string)($row['yxmc'] ?? ''));
             $row['yxgw'] = $this->cleanUtf8((string)($row['yxgw'] ?? ''));
             $row['czje'] = round((float)($row['czje'] ?? 0), 2);
@@ -1586,9 +1601,12 @@ class Kill extends BaseController
             $row['czqf'] = $this->cleanUtf8((string)($row['czqf'] ?? ''));
             $row['QQ'] = $this->cleanUtf8((string)($row['QQ'] ?? ''));
             $row['is_cz'] = (int)($row['is_cz'] ?? 0);
-            //create_time转换为时间格式
-            $row['create_time'] = date('Y-m-d H:i:s', (int)($row['create_time'] ?? 0));
-            $row['update_time'] = date('Y-m-d H:i:s', (int)($row['update_time'] ?? 0));
+            $row['grant_status'] = (int)($row['grant_status'] ?? 0);
+            $row['grant_time'] = $grantTime > 0 ? date('Y-m-d H:i:s', $grantTime) : '';
+            $row['use_batch_no'] = (string)($row['use_batch_no'] ?? '');
+            $row['create_time'] = $createTime > 0 ? date('Y-m-d H:i:s', $createTime) : '';
+            $row['update_time'] = $updateTime > 0 ? date('Y-m-d H:i:s', $updateTime) : '';
+            $row['use_time'] = $status === 2 ? $row['update_time'] : '——';
         }
         unset($row);
 
@@ -1612,7 +1630,8 @@ class Kill extends BaseController
     public function use_red_bag()
     {
         $openId = trim((string)$this->request->param('open_id', ''));
-        $redBagId = (int)$this->request->param('red_bag_id', 0);
+        $redBagIdsParam = $this->request->param('red_bag_ids', []);
+        $singleRedBagId = (int)$this->request->param('red_bag_id', 0);
 
         $yxmc = trim((string)$this->request->param('yxmc', ''));
         $yxgw = trim((string)$this->request->param('yxgw', ''));
@@ -1625,8 +1644,20 @@ class Kill extends BaseController
             return json(['code' => 0, 'msg' => 'open_id不能为空']);
         }
 
-        if ($redBagId <= 0) {
-            return json(['code' => 0, 'msg' => 'red_bag_id不能为空']);
+        $redBagIds = [];
+        if (is_array($redBagIdsParam)) {
+            $redBagIds = $redBagIdsParam;
+        } elseif (is_string($redBagIdsParam) && trim($redBagIdsParam) !== '') {
+            $redBagIds = explode(',', trim($redBagIdsParam));
+        }
+
+        $redBagIds = array_values(array_unique(array_filter(array_map('intval', $redBagIds))));
+        if (empty($redBagIds) && $singleRedBagId > 0) {
+            $redBagIds = [$singleRedBagId];
+        }
+
+        if (empty($redBagIds)) {
+            return json(['code' => 0, 'msg' => 'red_bag_id或red_bag_ids不能为空']);
         }
 
         if ($yxmc === '') {
@@ -1657,65 +1688,92 @@ class Kill extends BaseController
             return json(['code' => 0, 'msg' => '用户不存在']);
         }
 
-        $row = Db::table('ul_user_kill_red_bag')
-            ->where('id', $redBagId)
+        $rows = Db::table('ul_user_kill_red_bag')
             ->where('open_id', $openId)
-            ->find();
+            ->whereIn('id', $redBagIds)
+            ->select()
+            ->toArray();
 
-        if (!$row) {
-            return json(['code' => 0, 'msg' => '红包不存在']);
+        if (count($rows) !== count($redBagIds)) {
+            return json(['code' => 0, 'msg' => '存在红包不存在或不属于当前用户']);
         }
 
-        if ((int)($row['status'] ?? 0) !== 1) {
-            return json(['code' => 0, 'msg' => '红包已使用或不可用']);
-        }
+        foreach ($rows as $row) {
+            if ((int)($row['status'] ?? 0) !== 1) {
+                return json(['code' => 0, 'msg' => '存在已使用或不可用的红包']);
+            }
 
-        $amount = round((float)($row['amount'] ?? 0), 2);
-        if ($amount <= 0) {
-            return json(['code' => 0, 'msg' => '红包金额无效']);
+            $amount = round((float)($row['amount'] ?? 0), 2);
+            if ($amount <= 0) {
+                return json(['code' => 0, 'msg' => '存在红包金额无效的记录']);
+            }
         }
 
         $now = time();
+        $useBatchNo = $this->createUseBatchNo($openId);
 
-        $ok = Db::table('ul_user_kill_red_bag')
-            ->where('id', $redBagId)
-            ->where('open_id', $openId)
-            ->where('status', 1)
-            ->update([
-                'status' => 2,
-                'remark' => '红包已使用',
-                'yxmc' => $yxmc,
-                'yxgw' => $yxgw,
-                'czje' => $amount,
-                'hbmc' => $hbmc,
-                'czzh' => $czzh,
-                'czqf' => $czqf,
-                'QQ' => $qq,
-                'is_cz' => 1,
-                'update_time' => $now,
+        Db::startTrans();
+        try {
+            foreach ($rows as $row) {
+                $rowId = (int)$row['id'];
+                $amount = round((float)($row['amount'] ?? 0), 2);
+
+                $ok = Db::table('ul_user_kill_red_bag')
+                    ->where('id', $rowId)
+                    ->where('open_id', $openId)
+                    ->where('status', 1)
+                    ->update([
+                        'status' => 2,
+                        'remark' => '红包已使用',
+                        'yxmc' => $yxmc,
+                        'yxgw' => $yxgw,
+                        'czje' => $amount,
+                        'hbmc' => $hbmc,
+                        'czzh' => $czzh,
+                        'czqf' => $czqf,
+                        'QQ' => $qq,
+                        'is_cz' => 1,
+                        'use_batch_no' => $useBatchNo,
+                        'update_time' => $now,
+                    ]);
+
+                if ($ok === false || $ok === 0) {
+                    throw new \Exception('更新红包状态失败，id=' . $rowId);
+                }
+            }
+
+            $latestRows = Db::table('ul_user_kill_red_bag')
+                ->field('id,open_id,user_id,gw_id,gw_title,amount,red_image,status,remark,grant_remark,yxmc,yxgw,czje,hbmc,czzh,czqf,QQ,is_cz,grant_status,grant_time,use_batch_no,create_time,update_time')
+                ->where('open_id', $openId)
+                ->whereIn('id', $redBagIds)
+                ->order('id desc')
+                ->select()
+                ->toArray();
+
+            Db::commit();
+
+            $latestRows = $this->formatRedBagRows($latestRows);
+
+            $totalAmount = 0;
+            foreach ($latestRows as &$latestRow) {
+                $totalAmount += round((float)($latestRow['amount'] ?? 0), 2);
+            }
+            unset($latestRow);
+
+            return json([
+                'code' => 200,
+                'msg' => '红包已使用',
+                'data' => [
+                    'use_batch_no' => $useBatchNo,
+                    'count' => count($latestRows),
+                    'total_amount' => round($totalAmount, 2),
+                    'rows' => $latestRows,
+                ],
             ]);
-
-        if ($ok === false || $ok === 0) {
-            return json(['code' => 0, 'msg' => '更新红包状态失败']);
+        } catch (\Throwable $e) {
+            Db::rollback();
+            return json(['code' => 0, 'msg' => '批量使用红包失败: ' . $e->getMessage()]);
         }
-
-        $latest = Db::table('ul_user_kill_red_bag')
-            ->field('id,open_id,user_id,gw_id,gw_title,amount,red_image,status,remark,yxmc,yxgw,czje,hbmc,czzh,czqf,QQ,is_cz,create_time,update_time')
-            ->where('id', $redBagId)
-            ->find();
-
-        $rows = $this->formatRedBagRows($latest ? [$latest] : []);
-        $latest = $rows[0] ?? [];
-
-        if (!empty($latest)) {
-            $latest['use_time'] = (int)($latest['update_time'] ?? 0);
-        }
-
-        return json([
-            'code' => 200,
-            'msg' => '红包已使用',
-            'data' => $latest,
-        ]);
     }
 
     /**
@@ -1746,7 +1804,7 @@ class Kill extends BaseController
         }
 
         $query = Db::table('ul_user_kill_red_bag')
-            ->field('id,open_id,user_id,gw_id,gw_title,amount,red_image,status,remark,yxmc,yxgw,czje,hbmc,czzh,czqf,QQ,is_cz,create_time,update_time')
+            ->field('id,open_id,user_id,gw_id,gw_title,amount,red_image,status,remark,grant_remark,yxmc,yxgw,czje,hbmc,czzh,czqf,QQ,is_cz,grant_status,grant_time,use_batch_no,create_time,update_time')
             ->where('open_id', $openId)
             ->order('status asc');
 
@@ -1801,7 +1859,7 @@ class Kill extends BaseController
         }
 
         $query = Db::table('ul_user_kill_red_bag')
-            ->field('id,open_id,user_id,gw_id,gw_title,amount,red_image,status,remark,yxmc,yxgw,czje,hbmc,czzh,czqf,QQ,is_cz,create_time,update_time')
+            ->field('id,open_id,user_id,gw_id,gw_title,amount,red_image,status,remark,grant_remark,yxmc,yxgw,czje,hbmc,czzh,czqf,QQ,is_cz,grant_status,grant_time,use_batch_no,create_time,update_time')
             ->where('open_id', $openId)
             ->where('status', 1);
 
@@ -1856,7 +1914,7 @@ class Kill extends BaseController
         }
 
         $query = Db::table('ul_user_kill_red_bag')
-            ->field('id,open_id,user_id,gw_id,gw_title,amount,red_image,status,remark,yxmc,yxgw,czje,hbmc,czzh,czqf,QQ,is_cz,create_time,update_time')
+            ->field('id,open_id,user_id,gw_id,gw_title,amount,red_image,status,remark,grant_remark,yxmc,yxgw,czje,hbmc,czzh,czqf,QQ,is_cz,grant_status,grant_time,use_batch_no,create_time,update_time')
             ->where('open_id', $openId)
             ->where('status', 2);
 
@@ -1879,11 +1937,6 @@ class Kill extends BaseController
             ->toArray();
 
         $rows = $this->formatRedBagRows($rows);
-
-        foreach ($rows as &$row) {
-            $row['use_time'] = (int)($row['update_time'] ?? 0);
-        }
-        unset($row);
 
         return json([
             'code' => 200,
