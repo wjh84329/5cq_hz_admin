@@ -1586,8 +1586,9 @@ class Kill extends BaseController
             $row['czqf'] = $this->cleanUtf8((string)($row['czqf'] ?? ''));
             $row['QQ'] = $this->cleanUtf8((string)($row['QQ'] ?? ''));
             $row['is_cz'] = (int)($row['is_cz'] ?? 0);
-            $row['create_time'] = (int)($row['create_time'] ?? 0);
-            $row['update_time'] = (int)($row['update_time'] ?? 0);
+            //create_time转换为时间格式
+            $row['create_time'] = date('Y-m-d H:i:s', (int)($row['create_time'] ?? 0));
+            $row['update_time'] = date('Y-m-d H:i:s', (int)($row['update_time'] ?? 0));
         }
         unset($row);
 
