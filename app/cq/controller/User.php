@@ -56,7 +56,7 @@ class User extends BaseController
         if($open_id !=null){
             $up_open_id = $this->request->param('up_id');
             $token = md5($open_id.time());
-            cache('user_'.$open_id, $token, 300);
+            cache('user_'.$open_id, $token, 3600);
             $info = Db::table('ul_order_user')->where('open_id', $open_id)->findOrEmpty();
 
             if (!empty($info) && $info['state'] == 1) {
@@ -323,7 +323,7 @@ class User extends BaseController
             $data['avatar'] = $user->getAvatar();
             $data['avatar2'] = $user->getAvatar();
             $token = md5($data['open_id'].time());
-            cache('user_'.$data['open_id'], $token, 300);
+            cache('user_'.$data['open_id'], $token, 3600);
             $list = Db::table('ul_order_user')->where('open_id',$data['open_id'])->find();
             if($list){
                 return json(['code'=>200,'msg'=>'用户信息','data'=>$list,'token'=>$token]);
@@ -422,7 +422,7 @@ class User extends BaseController
                     return json(['code'=>200,'msg'=>'获取成功','data'=>$urlss,'key'=>$result['ticket']]);
                 }else{
                     $token = md5($open_id.time());
-                    cache('user_'.$open_id, $token, 300);
+                    cache('user_'.$open_id, $token, 3600);
                     return json(['code'=>200,'msg'=>'获取成功','data'=>$info,'token'=>$token]);
                 }
             }else{
@@ -3348,7 +3348,7 @@ class User extends BaseController
     public function sc(){
         $ip = Request::header('x-forwarded-for');
         $clientIP = explode(',', $ip)[0] ?? '';
-        cache($clientIP,'1234',300);
+        cache($clientIP,'1234',3600);
         $data = \cache($clientIP);
         return json($data);
     }
