@@ -1725,6 +1725,61 @@ class Kill extends BaseController
      * limit 可选，默认20，最大100
      * 返回: 红包列表，包含红包金额、关联怪物等信息
      */
+    public function red_list()
+    {
+        $openId = trim((string)$this->request->param('open_id', ''));
+        $page = max(1, (int)$this->request->param('page', 1));
+        $limit = min(100, max(1, (int)$this->request->param('limit', 20)));
+
+        if ($openId === '') {
+            return json(['code' => 0, 'msg' => 'open_id不能为空']);
+        }
+
+        $user = Db::table('ul_order_user')
+            ->field('id,open_id,lv')
+            ->where('open_id', $openId)
+            ->find();
+
+        if (!$user) {
+            return json(['code' => 0, 'msg' => '用户不存在']);
+        }
+
+        $query = Db::table('ul_user_kill_red_bag')
+            ->field('id,open_id,user_id,gw_id,gw_title,amount,red_image,status,remark,yxmc,yxgw,czje,hbmc,czzh,czqf,QQ,is_cz,create_time,update_time')
+            ->where('open_id', $openId)
+            ->order('status asc');
+
+        $total = (int)$query->count();
+
+        $rows = $query
+            ->order('create_time desc,id desc')
+            ->page($page, $limit)
+            ->select()
+            ->toArray();
+
+        $rows = $this->formatRedBagRows($rows);
+
+        return json([
+            'code' => 200,
+            'msg' => '成功',
+            'data' => [
+                'open_id' => $openId,
+                'page' => $page,
+                'limit' => $limit,
+                'total' => $total,
+                'rows' => $rows,
+            ],
+        ]);
+    }
+
+    /**
+     * 获取用户未使用的红包列表
+     * 入参:
+     * open_id 必填
+     * page 可选，默认1
+     * limit 可选，默认20，最大100
+     * 返回: 红包列表，包含红包金额、关联怪物等信息
+     */
     public function red_unused_list()
     {
         $openId = trim((string)$this->request->param('open_id', ''));
