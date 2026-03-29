@@ -1975,4 +1975,34 @@ class Kill extends BaseController
             ],
         ]);
     }
+
+    /**
+     * 获取yxsc表的排行榜，关联ul_order_user表，返回排行榜数据接口
+      * 入参:无
+      * 返回:排行榜数据，包含用户昵称、头像、分数等信息
+     */
+    public function today_share_list()
+    {
+        $rankSubSql = Db::table('yxsc')
+            ->field("open_id,SUM(IFNULL(yxsc,0) + IFNULL(hf_sc,0)) AS total_sc")
+            ->group('open_id')
+            ->order('total_sc desc')
+            ->limit(100)
+            ->buildSql();
+
+        $list = Db::table($rankSubSql . ' t')
+            ->leftJoin('ul_order_user u', 't.open_id = u.open_id')
+            ->field('t.open_id,u.nickname,u.avatar,u.lv,t.total_sc')
+            ->order('t.total_sc desc')
+            ->select()
+            ->toArray();
+
+        return json([
+            'code' => 200,
+            'msg' => '成功',
+            'data' => [
+                'today_share_list' => $list,
+            ],
+        ]);
+    }
 }
