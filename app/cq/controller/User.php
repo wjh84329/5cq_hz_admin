@@ -170,6 +170,21 @@ class User extends BaseController
         return json(['code'=>200,'msg'=>'用户信息','data'=>$info]);
     }
 
+    public function get_user_info_h52(){
+        $ip = Request::header('x-forwarded-for');
+        $clientIP = explode(',', $ip)[0] ?? '';
+        $info = Db::table('ul_order_user')->where('open_id',$this->request->param('open_id'))->find();
+        if($info['state'] == 1){
+                return json(['code'=>0,'msg'=>'账户已被封禁']);
+            }
+        $sum1 = Db::table('yxsc')->where('open_id',$this->request->param('open_id'))->sum('yxsc');//普通游戏时长
+        $sum2 = Db::table('yxsc')->where('open_id',$this->request->param('open_id'))->sum('hf_sc');//好服游戏时长
+        $sum = $sum1+$sum2;
+        $info['yxsc'] = $sum;
+        Db::table('ul_order_user')->where('open_id',$this->request->param('open_id'))->update(['ip'=>$clientIP]);
+        return json(['code'=>200,'msg'=>'用户信息','data'=>$info]);
+    }
+
     /*
      *当前登录用户id
      * */

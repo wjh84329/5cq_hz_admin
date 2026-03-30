@@ -14,6 +14,7 @@ class requestLogin
     protected $excludeUris = [
         'user/getWechatInfo',
         'user/setCoinShare',
+        'user/get_user_info_h52'
     ];
     public function handle(Request $request, \Closure $next){
         // 设置 CORS 头部（通常在全局中间件或响应中设置更合适）
