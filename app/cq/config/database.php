@@ -62,13 +62,13 @@ return [
             // 数据库类型
             'type'            => env('DB_TYPE', 'mysql'),
             // 服务器地址
-            'hostname'        => env('DB_HOST', '43.249.193.228'),
+            'hostname'        => env('DB_HOST', '120.55.68.91'),
             // 数据库名
-            'database'        => env('DB_NAME', '1pk'),
+            'database'        => env('DB_NAME', '5cq'),
             // 用户名
-            'username'        => env('DB_USER', 'root'),
+            'username'        => env('DB_USER', '5cq'),
             // 密码
-            'password'        => env('DB_PASS', 'yn110299'),
+            'password'        => env('DB_PASS', 'WsTxG4babkTmP2YH'),
             // 端口
             'hostport'        => env('DB_PORT', '3306'),
             // 数据库连接参数

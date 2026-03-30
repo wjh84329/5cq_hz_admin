@@ -6,6 +6,7 @@ namespace app\cq\controller;
 use app\BaseController;
 use think\db\Where;
 use think\facade\Db;
+use think\facade\Cache;
 
 class Kill extends BaseController
 {
@@ -124,7 +125,20 @@ class Kill extends BaseController
 
         // 最终截断为 8
         $selected = array_slice($selected, 0, $targetCount);
+        //加入redis
+        $cacheData = [
+            'open_id' => $openId,
+            'user_lv' => (string)$user['lv'],
+            'current_level' => [
+                'id' => (int)$currentLevel['id'],
+                'name' => (string)$currentLevel['level_name'],
+                'level' => (int)$currentLevel['level'],
+            ],
+            'monsters' => $selected,
+            'created_at' => time(),
+        ];
 
+        Cache::set($this->getMonsterListCacheKey($openId), $cacheData, 1800);
         return json([
             'code' => 200,
             'msg'  => '成功',
@@ -669,6 +683,45 @@ class Kill extends BaseController
         return min($count, $maxAvailable);
     }
 
+    private function getMonsterListCacheKey(string $openId): string
+    {
+        return 'kill_monster_list_' . $openId;
+    }
+
+    private function getCachedMonsterMap(string $openId): array
+    {
+        $cacheData = Cache::get($this->getMonsterListCacheKey($openId));
+
+        if (!is_array($cacheData)) {
+            return [];
+        }
+
+        $monsters = $cacheData['monsters'] ?? [];
+        if (!is_array($monsters) || empty($monsters)) {
+            return [];
+        }
+
+        $monsterMap = [];
+        foreach ($monsters as $monster) {
+            $monsterId = (int)($monster['id'] ?? 0);
+            if ($monsterId <= 0) {
+                continue;
+            }
+
+            $monsterMap[$monsterId] = [
+                'id' => $monsterId,
+                'title' => $this->cleanUtf8((string)($monster['title'] ?? '')),
+                'images' => $this->cleanUtf8((string)($monster['images'] ?? '')),
+                'probability' => (int)($monster['probability'] ?? 0),
+                'from_level_id' => (int)($monster['from_level_id'] ?? 0),
+                'from_level_name' => (string)($monster['from_level_name'] ?? ''),
+                'from_level' => (int)($monster['from_level'] ?? 0),
+            ];
+        }
+
+        return $monsterMap;
+    }
+
     /**
      * 打怪抽奖接口
      * 入参:
@@ -689,66 +742,42 @@ class Kill extends BaseController
             return json(['code' => 0, 'msg' => '用户不存在']);
         }
 
-        // 当前用户等级
-        $currentLevel = Db::table('ul_user_level')
-            ->where('level_name', (string)$user['lv'])
-            ->find();
-
-        if (!$currentLevel) {
-            $currentLevel = Db::table('ul_user_level')->order('level asc,id asc')->find();
-            if (!$currentLevel) {
-                return json(['code' => 0, 'msg' => '等级配置不存在']);
-            }
+        $monsterMap = $this->getCachedMonsterMap($openId);
+        if (empty($monsterMap)) {
+            return json(['code' => 0, 'msg' => '请先获取怪物列表']);
         }
 
-        // 可用等级ID
-        $levelIds = Db::table('ul_user_level')
-            ->where('level', '<=', (int)$currentLevel['level'])
-            ->column('id');
-
-        if (empty($levelIds)) {
-            return json(['code' => 0, 'msg' => '可用等级为空']);
-        }
-
-        // 如果未指定怪物ID，随机选择一个可打怪物
+        // 只能从 monster_list 缓存的候选怪物里选择
         if ($gwId <= 0) {
-            $availableMonsters = Db::table('ul_user_level_kill_gw')
-                ->field('gw_id,probability')
-                ->whereIn('level_id', $levelIds)
-                ->select()
-                ->toArray();
+            $availableMonsters = array_values($monsterMap);
 
             if (empty($availableMonsters)) {
                 return json(['code' => 0, 'msg' => '无可用怪物']);
             }
 
-            // 按概率随机选择怪物
             $chosenMonster = $this->weightedPick($availableMonsters);
-            $gwId = (int)$chosenMonster['gw_id'];
+            $gwId = (int)($chosenMonster['id'] ?? 0);
+
+            if ($gwId <= 0) {
+                return json(['code' => 0, 'msg' => '缓存怪物数据无效']);
+            }
+        } elseif (!isset($monsterMap[$gwId])) {
+            return json(['code' => 0, 'msg' => '该怪物不在当前候选列表中']);
         }
 
         $monster = Db::table('hz_kill_gw')
             ->field('id,title,images')
             ->where('id', $gwId)
             ->find();
+
         if (!$monster) {
             return json(['code' => 0, 'msg' => '怪物不存在']);
-        }
-
-        // 验证怪物是否可打
-        $canFight = Db::table('ul_user_level_kill_gw')
-            ->whereIn('level_id', $levelIds)
-            ->where('gw_id', $gwId)
-            ->count();
-
-        if ((int)$canFight <= 0) {
-            return json(['code' => 0, 'msg' => '该怪物不在当前可打范围内']);
         }
 
         // 消耗金币配置
         $killCfg = Db::table('hz_kill')->where('id', 1)->find();
         $consumeCoin = max(0, (int)($killCfg['consume_coin'] ?? 0));
-        $redReward = $this->buildRedReward((array)$killCfg);// 红包奖励
+        $redReward = $this->buildRedReward((array)$killCfg);
 
         $userCoin = (float)($user['coin_num'] ?? 0);
         if ($consumeCoin > 0 && $userCoin < $consumeCoin) {
@@ -789,7 +818,6 @@ class Kill extends BaseController
                 'probability' => (int)($picked['probability'] ?? 0),
             ];
 
-            // 已抽中的物品从候选池移除，保证一次抽奖中同物品不会重复出现
             foreach ($availablePool as $index => $poolItem) {
                 if ((int)($poolItem['item_id'] ?? 0) === $itemId) {
                     unset($availablePool[$index]);
@@ -911,15 +939,13 @@ class Kill extends BaseController
                 'code' => 200,
                 'msg' => '抽奖成功',
                 'data' => [
-                    'consume_coin' => $consumeCoin,// 本次抽奖消耗金币
-                    // 当前怪物信息
+                    'consume_coin' => $consumeCoin,
                     'monster' => [
                         'id' => (int)$monster['id'],
                         'title' => $this->cleanUtf8((string)$monster['title']),
                         'images' => $this->cleanUtf8((string)$monster['images']),
                     ],
-                    'rewards' => $rewards,// 物品奖励列表
-                    // 红包奖励（如果有的话）
+                    'rewards' => $rewards,
                     'red_reward' => [
                         'hit' => (int)$redReward['hit'],
                         'amount' => (float)$redReward['amount'],
@@ -927,9 +953,9 @@ class Kill extends BaseController
                         'image' => (string)$redReward['image'],
                         'config' => (string)$redReward['config'],
                     ],
-                    'bag' => $bagResults,// 本次抽奖背包变动详情
-                    'red_bag' => $redBag,// 红包入包详情（如果有的话）
-                    'user' => $latestUser,// 最新的用户信息，包含剩余金币等
+                    'bag' => $bagResults,
+                    'red_bag' => $redBag,
+                    'user' => $latestUser,
                 ],
             ]);
         } catch (\Throwable $e) {
