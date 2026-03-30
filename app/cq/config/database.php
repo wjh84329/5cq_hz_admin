@@ -23,7 +23,7 @@ return [
         'mysql' => [
             'type'            => env('DB_TYPE', 'mysql'),
             // 服务器地址
-            'hostname'        => env('DB_HOST', '127.0.0.1'),
+            'hostname'        => env('DB_HOST', '120.55.68.91'),
             // 数据库名
             'database'        => env('DB_NAME', '5cq'),
             // 用户名
