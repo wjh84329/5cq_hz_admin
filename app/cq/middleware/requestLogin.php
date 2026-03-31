@@ -16,7 +16,8 @@ class requestLogin
         'user/setCoinShare',
         'user/get_user_info_h52',
         'kill/monster_list',
-        'goods/order_list'
+        'goods/order_list',
+        'user/get_order_list'
     ];
     public function handle(Request $request, \Closure $next){
         // 设置 CORS 头部（通常在全局中间件或响应中设置更合适）
