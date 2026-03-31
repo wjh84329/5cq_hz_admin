@@ -3029,6 +3029,22 @@ class User extends BaseController
      */
     public function get_order_list(){
         $data = $this->request->param();
+        $page = $this->request->param('pageNum');
+        $count = $this->request->param('pageSize');
+        $limit = Db::table('yxcz')
+            ->where('open_id',$data['open_id'])
+            ->count();
+        $limits = ceil($limit/$count);
+        $list = Db::table('yxcz')
+            ->page($page,$count)
+            ->where('open_id',$data['open_id'])
+            ->order('update_time desc')
+            ->select();
+        return json(['code' => 200, 'msg' => '成功','list'=>$list,'limit'=>$limits,'count'=>$limit]);
+    }
+
+    public function get_order_list2(){
+        $data = $this->request->param();
         $page = $this->request->param('page');
         $count = $this->request->param('limit');
         $limit = Db::table('yxcz')
