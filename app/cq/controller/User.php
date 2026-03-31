@@ -3029,8 +3029,8 @@ class User extends BaseController
      */
     public function get_order_list(){
         $data = $this->request->param();
-        $page = $this->request->param('pageNum');
-        $count = $this->request->param('pageSize');
+        $page = $this->request->param('page');
+        $count = $this->request->param('limit');
         $limit = Db::table('yxcz')
             ->where('open_id',$data['open_id'])
             ->count();
