@@ -17,8 +17,24 @@ class requestLogin
         'user/get_user_info_h52',
         'kill/monster_list',
         'goods/order_list',
+        'user/get_order_list',
         'user/get_order_list2',
-        'user/coin_info_list'
+        'user/coin_info_list',
+        'kill/bag_list',
+        'kill/kill_record_list',
+        'kill/buildQuotas',
+        'kill/level_monsters',
+        'kill/level_monsters1',
+        'kill/get_kill_config',
+        'kill/kill_record_list',
+        'kill/exchange_record_list',
+        'kill/latest_coin_random_list',
+        'kill/SelectCoinInfoOne',
+        'kill/red_list',
+        'kill/red_unused_list',
+        'kill/red_used_list',
+        'kill/today_share_count',
+        'kill/today_share_list'
     ];
     public function handle(Request $request, \Closure $next){
         // 设置 CORS 头部（通常在全局中间件或响应中设置更合适）
