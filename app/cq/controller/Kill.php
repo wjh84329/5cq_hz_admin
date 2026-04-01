@@ -138,7 +138,7 @@ class Kill extends BaseController
             'created_at' => time(),
         ];
 
-        Cache::set($this->getMonsterListCacheKey($openId), $cacheData, 1800);
+        Cache::set($this->getMonsterListCacheKey($openId), $cacheData, 0);
         return json([
             'code' => 200,
             'msg'  => '成功',
