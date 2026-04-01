@@ -1965,8 +1965,10 @@ class Kill extends BaseController
         return json([
             'code'  => 0,
             'msg'   => '',
-            'count' => $count,
-            'data'  => array_values($list),
+            'data' => [
+                'total' => $count,
+                'rows'  => array_values($list),
+             ]
         ]);
     }
 
@@ -1976,7 +1978,7 @@ class Kill extends BaseController
             ->where('status', 2)
             ->where('open_id', $openId);
         $rows = $query
-            ->field('id,open_id,user_id,gw_id,gw_title,amount,status,is_cz,grant_status,grant_time,grant_remark,use_batch_no,create_time,update_time')
+            ->field('id,open_id,user_id,gw_id,gw_title,amount,status,is_cz,grant_status,grant_time,grant_remark,use_batch_no,create_time,update_time,yxmc,yxgw,czje,hbmc,czzh,czqf,QQ')
             ->order('id desc')
             ->select()
             ->toArray();
@@ -2013,10 +2015,17 @@ class Kill extends BaseController
             'create_time' => (int)($row['create_time'] ?? 0),
             'update_time' => (int)($row['update_time'] ?? 0),
             'create_time_text' => $this->formatTime((int)($row['create_time'] ?? 0)),
-            'update_time_text' => $status === 2 ? $this->formatTime((int)($row['update_time'] ?? 0), '——') : '——',
+            'use_time' => $status === 2 ? $this->formatTime((int)($row['update_time'] ?? 0), '——') : '——',
             'grant_time_text' => $grantStatus === 1 ? $this->formatTime((int)($row['grant_time'] ?? 0), '——') : '——',
             'row_mode' => 'single',
             'sort_time' => $status === 2 ? (int)($row['update_time'] ?? 0) : (int)($row['create_time'] ?? 0),
+            'yxmc' => (string)($row['yxmc'] ?? ''),
+            'yxgw' =>(string)($row['yxgw'] ?? ''),
+            'czje'=> $this->formatTime((int)($row['czje'] ?? 0), ''),
+            'hbmc' => (string)($row['hbmc'] ?? ''),
+            'czzh' => (string)($row['czzh'] ?? ''),
+            'czqf' => (string)($row['czqf'] ?? ''),
+            'QQ' => (string)($row['QQ'] ?? ''),
         ];
     }
 
