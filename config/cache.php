@@ -26,5 +26,31 @@ return [
             'serialize'  => [],
         ],
         // 更多的缓存连接
+        'redis' => [
+            // 驱动方式
+            'type'       => 'redis',
+            // 服务器地址
+            'host'       => '127.0.0.1',
+            // 端口
+            'port'       => 6379,
+            // 密码
+            'password'   => 'Admin887572*',
+            // 选择库
+            'select'     => 0,
+            // 超时时间
+            'timeout'    => 0,
+            // 持久连接
+            'persistent' => false,
+            // 缓存前缀
+            'prefix'     => '',
+            // 缓存有效期 0表示永久缓存
+            'expire'     => 0,
+            // 缓存标签前缀
+            'tag_prefix' => 'tag:',
+            // 序列化机制
+            'serialize'  => [],
+            // 连接参数
+            'options'    => [],
+        ],
     ],
 ];
