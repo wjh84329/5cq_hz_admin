@@ -1939,42 +1939,90 @@ class Kill extends BaseController
             return json(['code' => 0, 'msg' => '用户不存在']);
         }
 
+        $rows = [];
+        $rows = array_merge($rows, $this->buildUnusedRows($openId));
+
+        usort($rows, function ($a, $b) {
+            $aSort = (int)($a['sort_time'] ?? 0);
+            $bSort = (int)($b['sort_time'] ?? 0);
+
+            if ($aSort === $bSort) {
+                return (int)($b['id'] ?? 0) <=> (int)($a['id'] ?? 0);
+            }
+
+            return $bSort <=> $aSort;
+        });
+
+        $count = count($rows);
+        $offset = ($page - 1) * $limit;
+        $list = array_slice($rows, $offset, $limit);
+
+        foreach ($list as &$row) {
+            unset($row['sort_time']);
+        }
+        unset($row);
+
+        return json([
+            'code'  => 0,
+            'msg'   => '',
+            'count' => $count,
+            'data'  => array_values($list),
+        ]);
+    }
+
+    private function buildUnusedRows(string $openId): array
+    {
         $query = Db::table('ul_user_kill_red_bag')
-            ->field('id,open_id,user_id,gw_id,gw_title,amount,red_image,status,remark,grant_remark,yxmc,yxgw,czje,hbmc,czzh,czqf,QQ,is_cz,grant_status,grant_time,use_batch_no,create_time,update_time')
-            ->where('open_id', $openId)
-            ->where('status', 2);
-
-        $startDate = trim((string)$this->request->param('start_date', ''));
-        $endDate = trim((string)$this->request->param('end_date', ''));
-
-        if ($startDate !== '') {
-            $query->where('update_time', '>=', strtotime($startDate));
-        }
-        if ($endDate !== '') {
-            $query->where('update_time', '<=', strtotime($endDate . ' 23:59:59'));
-        }
-
-        $total = (int)$query->count();
-
+            ->where('status', 2)
+            ->where('open_id', $openId);
         $rows = $query
-            ->order('update_time desc,id desc')
-            ->page($page, $limit)
+            ->field('id,open_id,user_id,gw_id,gw_title,amount,status,is_cz,grant_status,grant_time,grant_remark,use_batch_no,create_time,update_time')
+            ->order('id desc')
             ->select()
             ->toArray();
 
-        $rows = $this->formatRedBagRows($rows);
+        $result = [];
+        foreach ($rows as $row) {
+            $result[] = $this->formatSingleListRow($row);
+        }
 
-        return json([
-            'code' => 200,
-            'msg' => '成功',
-            'data' => [
-                'open_id' => $openId,
-                'page' => $page,
-                'limit' => $limit,
-                'total' => $total,
-                'rows' => $rows,
-            ],
-        ]);
+        return $result;
+    }
+
+    private function formatSingleListRow(array $row): array
+    {
+        $status = (int)($row['status'] ?? 0);
+        $grantStatus = (int)($row['grant_status'] ?? 0);
+        // $grantStatusText = $grantStatus === 1 ? '已发放' : '未发放';
+
+        return [
+            'id' => (int)($row['id'] ?? 0),
+            'open_id' => (string)($row['open_id'] ?? ''),
+            'user_id' => (int)($row['user_id'] ?? 0),
+            'gw_title' => (string)($row['gw_title'] ?? ''),
+            'amount' => round((float)($row['amount'] ?? 0), 2),
+            'status' => $status,
+            'status_text' => $status === 2 ? '已使用' : '未使用',
+            'red_count' => 1,
+            'is_cz' => (int)($row['is_cz'] ?? 0),
+            'grant_status' => $grantStatus,
+            // 'grant_status_text' => $grantStatusText,
+            'grant_time' => (int)($row['grant_time'] ?? 0),
+            'grant_remark' => (string)($row['grant_remark'] ?? ''),
+            'use_batch_no' => (string)($row['use_batch_no'] ?? ''),
+            'create_time' => (int)($row['create_time'] ?? 0),
+            'update_time' => (int)($row['update_time'] ?? 0),
+            'create_time_text' => $this->formatTime((int)($row['create_time'] ?? 0)),
+            'update_time_text' => $status === 2 ? $this->formatTime((int)($row['update_time'] ?? 0), '——') : '——',
+            'grant_time_text' => $grantStatus === 1 ? $this->formatTime((int)($row['grant_time'] ?? 0), '——') : '——',
+            'row_mode' => 'single',
+            'sort_time' => $status === 2 ? (int)($row['update_time'] ?? 0) : (int)($row['create_time'] ?? 0),
+        ];
+    }
+
+    private function formatTime(int $timestamp, string $default = ''): string
+    {
+        return $timestamp > 0 ? date('Y-m-d H:i:s', $timestamp) : $default;
     }
 
     /**

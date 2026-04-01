@@ -125,6 +125,14 @@ class Worker extends Server
             case 'get_user_info':
                 $this->handleGetUserInfo($connection);
                 return;
+            
+            case 'get_user_all_yxsc':
+                $this->handleGetUserAllYxsc($connection);
+                return;
+
+            case 'business_operation':
+                $this->handleBusinessOperation($connection);
+                return;
 
             default:
                 $this->sendJson($connection, [
@@ -296,6 +304,129 @@ class Worker extends Server
                 'sign'      => (string)($user['sign'] ?? ''),
                 'is_online' => (int)($user['is_online'] ?? 0),
             ],
+        ]);
+    }
+
+    /**
+     * 获取当前登录用户总游戏时长
+     *
+     * 对应 HTTP: /user/get_user_all_yxsc
+     *
+     * @param mixed $connection
+     */
+    protected function handleGetUserAllYxsc($connection)
+    {
+        if (!isset($connection->uid) || $connection->uid === '') {
+            $this->sendJson($connection, [
+                'type' => 'get_user_all_yxsc',
+                'code' => 0,
+                'msg'  => '请先登录',
+            ]);
+            return;
+        }
+
+        $openId = (string)$connection->uid;
+
+        $user = Db::table('ul_order_user')
+            ->field('open_id,state')
+            ->where('open_id', $openId)
+            ->find();
+
+        if (!$user) {
+            $this->sendJson($connection, [
+                'type' => 'get_user_all_yxsc',
+                'code' => 0,
+                'msg'  => '用户不存在',
+            ]);
+            return;
+        }
+
+        if ((int)($user['state'] ?? 0) === 1) {
+            $this->sendJson($connection, [
+                'type' => 'get_user_all_yxsc',
+                'code' => 0,
+                'msg'  => '账户已被封禁',
+            ]);
+            return;
+        }
+
+        $sum1 = Db::table('yxsc')->where('open_id', $openId)->sum('yxsc');
+        $sum2 = Db::table('yxsc')->where('open_id', $openId)->sum('hf_sc');
+        $sum  = $sum1 + $sum2;
+
+        $this->sendJson($connection, [
+            'type' => 'get_user_all_yxsc',
+            'code' => 200,
+            'msg'  => '成功',
+            'data' => [
+                'open_id'   => $openId,
+                'yxsc'      => (string)$sum1,
+                'hf_sc'     => (string)$sum2,
+                'total_yxsc'=> (string)$sum,
+            ],
+        ]);
+    }
+
+    /**
+     * 获取运营参数配置
+     *
+     * 对应 HTTP: /business/operation
+     *
+     * @param mixed $connection
+     */
+    protected function handleBusinessOperation($connection)
+    {
+        $list = Db::table('operation')->find(1);
+
+        if (!$list) {
+            $this->sendJson($connection, [
+                'type' => 'business_operation',
+                'code' => 0,
+                'msg'  => '运营配置不存在',
+            ]);
+            return;
+        }
+
+        $list1 = Db::table('hb')
+            ->where('type', 0)
+            ->whereTime('updata_time', 'today')
+            ->select()
+            ->toArray();
+
+        foreach ($list1 as $k1 => $v1) {
+            $time = date('Y-m-d', strtotime($list1[$k1]['updata_time']));
+            $dateTime = strtotime($time . ' 23:59:59');
+
+            $list1[$k1]['count'] = Db::table('coin_info')
+                ->where('hb_id', $v1['id'])
+                ->count();
+
+            $list1[$k1]['endTime'] = date('Y-m-d H:i:s', $dateTime);
+        }
+
+        $list2 = Db::table('hb')
+            ->where('type', 1)
+            ->select()
+            ->toArray();
+
+        foreach ($list2 as $k => $v) {
+            $list2[$k]['count'] = Db::table('coin_info')
+                ->where('hb_id', $v['id'])
+                ->count();
+
+            if ((int)$list2[$k]['count'] >= (int)$list2[$k]['num']) {
+                unset($list2[$k]);
+            }
+        }
+
+        $lists = array_merge($list1, array_values($list2));
+        $list['hb_num'] = count($lists);
+
+        $this->sendJson($connection, [
+            'type' => 'business_operation',
+            'code' => 200,
+            'msg'  => '运营参数配置',
+            'data' => $list,
         ]);
     }
 
