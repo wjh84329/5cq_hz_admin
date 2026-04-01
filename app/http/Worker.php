@@ -286,6 +286,11 @@ class Worker extends Server
             ]);
             return;
         }
+        //获取当前登录用户的token并续费
+        $token = Cache::store('redis')->get('user_' . $user['open_id']);
+        if ($token) {
+            Cache::store('redis')->set('user_' . $user['open_id'], $token, 3600);
+        }
 
         $this->sendJson($connection, [
             'type' => 'get_user_info',
