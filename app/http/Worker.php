@@ -148,9 +148,9 @@ class Worker extends Server
                 return;
 
             case '5cq_login':
-                if (!$this->checkToken($payload['open_id'], $payload['token'])) {
-                    return;
-                }
+                // if (!$this->checkToken($payload['open_id'], $payload['token'])) {
+                //     return;
+                // }
                 $this->handle5cqLogin($connection, $payload, 0);
                 
                 // 将连接添加到5cq连接map中
