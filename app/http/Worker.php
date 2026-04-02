@@ -320,7 +320,9 @@ class Worker extends Server
             $time_count_date = (int)date('j');
         } 
 
-        $time_count += $count;
+        if ($time_count < 240 * 60) {
+            $time_count += $count;
+        }
 
         $levelInfoList = Db::table('ul_user_level')->select();
 
