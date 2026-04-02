@@ -19,6 +19,13 @@ class Worker extends Server
     protected $wsWorker = null;
 
     /**
+     * 存储5cq连接的map，key为open_id
+     *
+     * @var array
+     */
+    protected $cqConnections = [];
+
+    /**
      * 每个进程启动
      *
      * @param W $worker
@@ -30,6 +37,9 @@ class Worker extends Server
         if (!isset($this->wsWorker->uidConnections) || !is_array($this->wsWorker->uidConnections)) {
             $this->wsWorker->uidConnections = [];
         }
+        
+        // 初始化5cq连接map
+        $this->cqConnections = [];
 
         // 内部推送端口只在一个进程中监听，避免端口重复占用
         if ((int)$worker->id === 0) {
@@ -90,6 +100,9 @@ class Worker extends Server
                 }
             }
         });
+        
+        // 定期向5cq连接发送信息
+        $this->startCqMessageTimer();
     }
 
     public function onMessage($connection, $data)
@@ -134,6 +147,36 @@ class Worker extends Server
                 $this->handleBusinessOperation($connection);
                 return;
 
+            case '5cq_login':
+                if (!$this->checkToken($payload['open_id'], $payload['token'])) {
+                    return;
+                }
+                $this->handle5cqLogin($connection, $payload, 0);
+                
+                // 将连接添加到5cq连接map中
+                $openId = $payload['open_id'];
+                $this->cqConnections[$openId] = $connection;
+                
+                // 每隔5秒发送一次登录信息
+                if (!isset($connection->loginTimerId)) {
+                    $connection->loginTimerId = Timer::add(5, function () use ($connection, $payload) {
+                        // 检查连接是否仍然有效
+                        if (property_exists($connection, 'closed') && $connection->closed) {
+                            // 连接已关闭，清除定时器
+                            if (isset($connection->loginTimerId)) {
+                                Timer::del($connection->loginTimerId);
+                                unset($connection->loginTimerId);
+                            }
+                            return;
+                        }
+                        
+                        // 安全执行登录信息发送
+                        $this->handle5cqLogin($connection, $payload, 5);
+                    });
+                }
+                return;
+
+
             default:
                 $this->sendJson($connection, [
                     'type' => $type === '' ? 'unknown' : $type,
@@ -160,6 +203,20 @@ class Worker extends Server
         if (isset($connection->uid) && $connection->uid !== '') {
             unset($this->wsWorker->uidConnections[$connection->uid]);
         }
+        
+        // 从5cq连接map中移除
+        foreach ($this->cqConnections as $openId => $conn) {
+            if ($conn === $connection) {
+                unset($this->cqConnections[$openId]);
+                break;
+            }
+        }
+        
+        // 清除登录定时器
+        if (isset($connection->loginTimerId)) {
+            Timer::del($connection->loginTimerId);
+            unset($connection->loginTimerId);
+        }
     }
 
     /**
@@ -173,15 +230,114 @@ class Worker extends Server
     {
         echo "error {$code} {$msg}\n";
     }
+    
+    /**
+     * 启动5cq消息定时器
+     */
+    private function startCqMessageTimer()
+    {
+        // 生成1-5秒的随机间隔
+        $interval = rand(1, 5);
+        $that = $this;
+        
+        Timer::add($interval, function () use ($that) {
+            // 向所有5cq连接发送信息
+            foreach ($that->cqConnections as $openId => $connection) {
+                // 检查连接是否仍然有效
+                if (property_exists($connection, 'closed') && $connection->closed) {
+                    // 连接已关闭，从map中移除
+                    unset($that->cqConnections[$openId]);
+                    continue;
+                }
+
+                $that->sendLatestCoinRandomList($connection, $that);
+            }
+            
+            // 重新设置定时器，使用新的随机间隔
+            $that->startCqMessageTimer();
+        }, [], false);
+    }
+
+    private function sendLatestCoinRandomList($connection, $that)
+    {
+        // 先取最新100条
+        $rows = Db::table('coin_info')->where('coin_num',">",0)->order('id desc')->limit(100)->select()->toArray();
+        if (empty($rows)) {
+            return ;
+        }
+
+        // 随机打散，再取前10条
+        shuffle($rows);
+        $result = [];
+        $picked = array_slice($rows, 0, 10);
+        foreach ($picked as $k => $v) {
+            $user = Db::table('ul_order_user')->where('open_id', $v['open_id'])->find();
+            if($v['code'] == 0){
+                $result[$k] = '用户' . $user['nickname'] . '通过' . $v['fs'] . '获得了' . $v['coin_num'] . '金币';
+            }else{
+                $result[$k] = '用户'. $user['nickname'] . '通过' . $v['fs'] . '消耗' . $v['coin_num'] . '金币';
+            }
+        }
+
+        // 这里可以添加具体的消息内容
+        $that->sendJson($connection, [
+            'type' => 'latest_coin_random_list',
+            'rows' => $result,
+        ]);
+    }
+
+    private function checkToken($openId, $token){
+        $cachedToken = Cache::get('user_' . $openId);
+        if ($cachedToken === $token) {
+            Cache::set('user_' . $openId, $token, 3600);
+            return true;
+        }
+        return false;
+    }
+
+    public function handle5cqLogin($connection, array $payload, $count)
+    {
+        $ip = $connection->getRemoteIp();
+        $info = Db::table('ul_order_user')->where('open_id',$payload['open_id'])->find();
+        if($info['state'] == 1){
+            return $this->sendJson($connection, ['code'=>0, 'type'=>$payload['type'], 'msg'=>'账户已被封禁']);
+        }
+        $sum1 = Db::table('yxsc')->where('open_id',$payload['open_id'])->sum('yxsc');//普通游戏时长
+        $sum2 = Db::table('yxsc')->where('open_id',$payload['open_id'])->sum('hf_sc');//好服游戏时长
+        $sum = $sum1+$sum2; 
+        $info['yxsc'] = $sum;
+
+        $time_count = $info['time_count'];
+        $time_count_date = $info['time_count_date'];
+        if ($time_count == null) {
+            $time_count = 0;
+        }
+        if ($time_count_date == null) {
+            $time_count_date = (int)date('j');
+        }
+        if ((int)date('j') != $time_count_date) {
+            $time_count = 0;
+            $time_count_date = (int)date('j');
+        } 
+
+        $time_count += $count;
+
+        $levelInfoList = Db::table('ul_user_level')->select();
+
+        Db::table('ul_order_user')->where('open_id',$payload['open_id'])
+            ->update(['ip'=>$ip, 'time_count'=>$time_count, 'time_count_date'=>$time_count_date]);
+        return $this->sendJson($connection, ['code'=>200, 'type'=>$payload['type'], 'msg'=>'用户信息', 'levelInfoList'=>$levelInfoList, 'data'=>$info]);
+    }
 
     /**
-     * 处理登录
+     * 处理5cq登录
      *
      * @param mixed $connection
      * @param array $payload
      */
     protected function handleLogin($connection, array $payload)
     {
+
         $openId = trim((string)($payload['open_id'] ?? ''));
         $token  = trim((string)($payload['token'] ?? ''));
 
