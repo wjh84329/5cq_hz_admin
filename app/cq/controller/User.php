@@ -807,7 +807,7 @@ class User extends BaseController
             $insertID = Db::table('coin_info')->insertGetId($data);
             $coininfo = Db::table('coin_info')->find($insertID);
             $up_coin = $operation['sharUserPercentage1']/100*$data['coin_num'];
-            if($user_info['up_id']){
+            if(!empty($user_info['up_id'])){
                 Db::table('ul_order_user')
                     ->where('id',$user_info['up_id'])
                     ->inc('coin_num',$up_coin)
