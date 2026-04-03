@@ -148,9 +148,9 @@ class Worker extends Server
                 return;
 
             case '5cq_login':
-                // if (!$this->checkToken($payload['open_id'], $payload['token'])) {
-                //     return;
-                // }
+                if (!$this->checkToken($payload['open_id'], $payload['token'])) {
+                    return;
+                }
                 $this->handle5cqLogin($connection, $payload, 0);
                 
                 // 将连接添加到5cq连接map中
@@ -287,9 +287,9 @@ class Worker extends Server
     }
 
     private function checkToken($openId, $token){
-        $cachedToken = Cache::get('user_' . $openId);
+        $cachedToken = Cache::store('redis')->get('user_' . $openId);
         if ($cachedToken === $token) {
-            Cache::set('user_' . $openId, $token, 3600);
+            Cache::store('redis')->set('user_' . $openId, $token, 3600);
             return true;
         }
         return false;
