@@ -152,6 +152,8 @@ class Worker extends Server
                     return;
                 }
                 $this->handle5cqLogin($connection, $payload, 0);
+                $that = $this;
+                $this->sendLatestCoinRandomList($connection, $that);
                 
                 // 将连接添加到5cq连接map中
                 $openId = $payload['open_id'];
