@@ -88,8 +88,8 @@ class User extends BaseController
                     'open_id' => $open_id,
                     'avatar' => $basic['avatar'],
                     'avatar2' => $basic['avatar'],
-                    'name' => 'Cqbox_' . rand_zifu(3, 6),
-                    'nickname' => 'Cqbox_' . rand_zifu(3, 6),
+                    'name' => '5CQ_' . rand_zifu(3, 6),
+                    'nickname' => '5CQ_' . rand_zifu(3, 6),
                     'ip' => $clientIP,
                     'up_id' => $up_open_id ?: null, // 统一使用 up_id
                 ];
