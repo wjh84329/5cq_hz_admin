@@ -796,36 +796,39 @@ class Kill extends BaseController
             return json(['code' => 0, 'msg' => '该怪物未配置掉落物品']);
         }
 
+        
+
         // 本次随机掉落 1-5 个物品，且相同物品只能出现一次
+        // 绝对概率掉落实现
         $draws = [];
         $availablePool = array_values($dropPool);
-        $drawCount = $this->pickRewardCount(count($availablePool));
 
-        for ($i = 0; $i < $drawCount; $i++) {
-            if (empty($availablePool)) {
-                break;
+        // 1. 先独立判定每个物品是否掉落
+        $hitItems = [];
+        foreach ($availablePool as $item) {
+            $prob = max(0, (int)($item['probability'] ?? 0));
+            // 以1000为分母，概率为千分比
+            if ($prob > 0 && mt_rand(1, 1000) <= $prob) {
+                $hitItems[] = $item;
             }
+        }
 
-            $picked = $this->weightedPick($availablePool);
-            $itemId = (int)($picked['item_id'] ?? 0);
-            $minNum = max(1, (int)($picked['min_num'] ?? 1));
-            $maxNum = max($minNum, (int)($picked['max_num'] ?? 1));
+        // 2. 随机打乱，最多掉落1~5个（不重复）
+        shuffle($hitItems);
+        $drawCount = $this->pickRewardCount(count($hitItems));
+        $hitItems = array_slice($hitItems, 0, $drawCount);
+
+        // 3. 生成掉落结果
+        foreach ($hitItems as $item) {
+            $itemId = (int)($item['item_id'] ?? 0);
+            $minNum = max(1, (int)($item['min_num'] ?? 1));
+            $maxNum = max($minNum, (int)($item['max_num'] ?? 1));
             $dropNum = mt_rand($minNum, $maxNum);
-
             $draws[] = [
                 'item_id' => $itemId,
                 'num' => $dropNum,
-                'probability' => (int)($picked['probability'] ?? 0),
+                'probability' => (int)($item['probability'] ?? 0),
             ];
-
-            foreach ($availablePool as $index => $poolItem) {
-                if ((int)($poolItem['item_id'] ?? 0) === $itemId) {
-                    unset($availablePool[$index]);
-                    break;
-                }
-            }
-
-            $availablePool = array_values($availablePool);
         }
 
         // 查询物品配置
