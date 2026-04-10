@@ -813,14 +813,14 @@ class User extends BaseController
                     ->inc('coin_num',$up_coin)
                     ->update();
                 $up_user_info = Db::table('ul_order_user')->where('id',$user_info['up_id'])->findOrEmpty();//上级用户信息
-                if(empty($up_user_info)){
-                    return json(['code'=>0,'msg'=>'未找到上级用户信息']);
+                if(!empty($up_user_info)){
+                    $up_data['open_id'] = $up_user_info['open_id'];
+                    $up_data['coin_num'] = $up_coin;
+                    $up_data['code'] = 0;
+                    $up_data['fs'] = '分享收益';
+                    Db::table('coin_info')->insert($up_data);
                 }
-                $up_data['open_id'] = $up_user_info['open_id'];
-                $up_data['coin_num'] = $up_coin;
-                $up_data['code'] = 0;
-                $up_data['fs'] = '分享收益';
-                Db::table('coin_info')->insert($up_data);
+                
             }
             return json(['code'=>200,'msg'=>'成功','user_info'=>$user_info,'coinInfo'=>$coininfo]);
         }elseif ($data['code']==1){
