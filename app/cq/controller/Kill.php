@@ -1350,7 +1350,8 @@ class Kill extends BaseController
                 
                 if ($todayRecord) {
                     $updateOk = Db::table('yxsc')
-                        ->where('id', (int)$todayRecord['id'])
+                        ->where('open_id', $openId)
+                        ->whereTime('update_time','today')
                         ->inc('yxsc', $totalExp)
                         ->update();
                     if (!$updateOk) {
@@ -1360,8 +1361,6 @@ class Kill extends BaseController
                     $insertOk = Db::table('yxsc')->insert([
                         'open_id' => $openId,
                         'yxsc' => $totalExp,
-                        'create_time' => $now,
-                        'update_time' => $now,
                     ]);
                     if (!$insertOk) {
                         throw new \Exception('新增游戏时长记录失败');
