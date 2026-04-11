@@ -176,6 +176,8 @@ class Kill extends AdminController
                 'images' => trim((string)$this->request->param('images')),
                 'value_min' => (float)$this->request->param('value_min', 0),
                 'value_max' => (float)$this->request->param('value_max', 0),
+                'exp' => (int)$this->request->param('exp', 0),
+                'mark' => trim((string)$this->request->param('mark', '')),
             ];
 
             if ($data['title'] === '') {
@@ -186,6 +188,9 @@ class Kill extends AdminController
             }
             if ($data['value_min'] > $data['value_max']) {
                 return json(['code' => 0, 'msg' => '价值区间不正确']);
+            }
+            if ($data['exp'] < 0) {
+                return json(['code' => 0, 'msg' => '经验值不能为负数']);
             }
 
             $ok = Db::table('hz_kill_wp')->insert($data);
@@ -211,6 +216,8 @@ class Kill extends AdminController
                 'images' => trim((string)$this->request->param('images')),
                 'value_min' => (float)$this->request->param('value_min', 0),
                 'value_max' => (float)$this->request->param('value_max', 0),
+                'exp' => (int)$this->request->param('exp', 0),
+                'mark' => trim((string)$this->request->param('mark', '')),
             ];
 
             if ($data['title'] === '') {
@@ -221,6 +228,9 @@ class Kill extends AdminController
             }
             if ($data['value_min'] > $data['value_max']) {
                 return json(['code' => 0, 'msg' => '价值区间不正确']);
+            }
+            if ($data['exp'] < 0) {
+                return json(['code' => 0, 'msg' => '经验值不能为负数']);
             }
 
             $ok = Db::table('hz_kill_wp')->where('id', $id)->update($data);
@@ -475,14 +485,10 @@ class Kill extends AdminController
     public function modify_wp($id)
     {
         $field = (string)$this->request->param('field', '');
-        $value = (float)$this->request->param('value', 0);
+        $value = $this->request->param('value', '');
 
-        if (!in_array($field, ['value_min', 'value_max'])) {
+        if (!in_array($field, ['value_min', 'value_max', 'exp', 'mark'])) {
             $this->error('不允许修改该字段');
-        }
-
-        if ($value < 0) {
-            $this->error('价值不能为负数');
         }
 
         $row = Db::table('hz_kill_wp')->find($id);
@@ -490,19 +496,96 @@ class Kill extends AdminController
             $this->error('数据不存在');
         }
 
-        $newMin = $field === 'value_min' ? $value : (float)$row['value_min'];
-        $newMax = $field === 'value_max' ? $value : (float)$row['value_max'];
+        $updateData = [];
 
-        if ($newMin > $newMax) {
-            $this->error('价值区间不正确');
+        if ($field === 'value_min' || $field === 'value_max') {
+            $value = (float)$value;
+            if ($value < 0) {
+                $this->error('价值不能为负数');
+            }
+
+            $newMin = $field === 'value_min' ? $value : (float)$row['value_min'];
+            $newMax = $field === 'value_max' ? $value : (float)$row['value_max'];
+
+            if ($newMin > $newMax) {
+                $this->error('价值区间不正确');
+            }
+
+            $updateData[$field] = $value;
+        } elseif ($field === 'exp') {
+            $value = (int)$value;
+            if ($value < 0) {
+                $this->error('经验值不能为负数');
+            }
+            $updateData[$field] = $value;
+        } elseif ($field === 'mark') {
+            $updateData[$field] = trim((string)$value);
         }
 
         $ok = Db::table('hz_kill_wp')
             ->where('id', $id)
-            ->update([
-                $field => $value,
-            ]);
+            ->update($updateData);
 
         $ok !== false ? $this->success('保存成功') : $this->error('保存失败');
+    }
+
+    /**
+     * @NodeAnotation(title="回收记录")
+     */
+    public function recycle_log()
+    {
+        if ($this->request->isAjax()) {
+            $page = (int)$this->request->param('page', 1);
+            $limit = (int)$this->request->param('limit', 10);
+            $openId = trim((string)$this->request->param('open_id', ''));
+
+            $query = Db::table('ul_user_item_bag_log')
+                ->where('biz_type', 'recycle');
+
+            if ($openId !== '') {
+                $query->where('open_id', $openId);
+            }
+
+            $count = (clone $query)->count();
+            $list = $query
+                ->order($this->sort)
+                ->page($page, $limit)
+                ->select()
+                ->toArray();
+
+            // 查询物品信息
+            $itemIds = array_unique(array_column($list, 'item_id'));
+            $itemMap = [];
+            if (!empty($itemIds)) {
+                $itemRows = Db::table('hz_kill_wp')
+                    ->field('id,title,exp,mark')
+                    ->whereIn('id', $itemIds)
+                    ->select()
+                    ->toArray();
+
+                foreach ($itemRows as $item) {
+                    $itemMap[(int)$item['id']] = $item;
+                }
+            }
+
+            // 补充物品信息
+            foreach ($list as &$row) {
+                $itemId = (int)$row['item_id'];
+                $item = $itemMap[$itemId] ?? null;
+                $row['item_title'] = $item ? $item['title'] : '';
+                $row['exp'] = $item ? (int)$item['exp'] : 0;
+                $row['mark'] = $item ? $item['mark'] : '';
+            }
+            unset($row);
+
+            return json([
+                'code'  => 0,
+                'msg'   => '',
+                'count' => $count,
+                'data'  => $list,
+            ]);
+        }
+
+        return $this->fetch('recycle_log');
     }
 }

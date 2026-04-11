@@ -40,6 +40,12 @@ define(["jquery", "easy-admin"], function ($, ea) {
         modify_url: 'business.kill/modify_monster_item',
     };
 
+    var recycle_init = {
+        table_elem: '#currentTable',
+        table_render_id: 'currentTableRenderId',
+        index_url: 'business.kill/recycle_log',
+    };
+
     var Controller = {
 
         index: function () {
@@ -107,8 +113,8 @@ define(["jquery", "easy-admin"], function ($, ea) {
                 ],
                 cols: [[
                     { type: "checkbox" },
-                    { field: 'id', width: 80, title: 'ID' },
-                    { field: 'title', minWidth: 180, title: '怪物名称' },
+                    { field: 'id', width: 80, title: 'ID',sort: false },
+                    { field: 'title', minWidth: 180, title: '怪物名称',sort: false },
                     { field: 'images', minWidth: 140, title: '怪物图片', search: false, templet: ea.table.image },
                     {
                         width: 200,
@@ -158,18 +164,31 @@ define(["jquery", "easy-admin"], function ($, ea) {
                 ],
                 cols: [[
                     { type: "checkbox" },
-                    { field: 'id', width: 80, title: 'ID' },
-                    { field: 'title', minWidth: 160, title: '物品名称' },
-                    { field: 'images', minWidth: 120, title: '物品图片', search: false, templet: ea.table.image },
-                    { field: 'value_min', width: 110, title: '价值下限', edit: 'text' },
-                    { field: 'value_max', width: 110, title: '价值上限', edit: 'text' },
+                    { field: 'id', width: 80, title: 'ID',sort: false },
+                    { field: 'title', minWidth: 160, title: '物品名称',sort: false },
+                    { field: 'images', minWidth: 120, title: '物品图片', search: false, templet: ea.table.image,sort: false },
+                    { field: 'value_min', width: 110, title: '价值下限', edit: 'text',sort: false },
+                    { field: 'value_max', width: 110, title: '价值上限', edit: 'text',sort: false },
                     {
                         field: 'value_range',
                         minWidth: 140,
                         title: '价值区间',
                         search: false,
+                        sort: false,
                         valueParser(value, data) {
                             return data.value_min + ' - ' + data.value_max;
+                        }
+                    },
+                    { field: 'exp', width: 100, title: '经验值', edit: 'text', sort: false },
+                    { 
+                        field: 'mark', 
+                        minWidth: 150, 
+                        title: '备注说明', 
+                        edit: 'textarea', 
+                        search: false, 
+                        sort: false,
+                        templet: function(d) {
+                            return '<div style="white-space: pre-wrap; word-break: break-word;">' + (d.mark || '') + '</div>';
                         }
                     },
                     {
@@ -210,15 +229,15 @@ ea.listen();
                 ],
                 cols: [[
                     { type: "checkbox" },
-                    { field: 'id', width: 80, title: 'ID' },
-                    { field: 'title', minWidth: 160, title: '物品名称' },
-                    { field: 'images', minWidth: 120, title: '物品图片', search: false, templet: ea.table.image },
-                    { field: 'value_min', width: 110, title: '价值下限' },
-                    { field: 'value_max', width: 110, title: '价值上限' },
-                    { field: 'probability', width: 100, title: '概率', edit: 'text' },
-                    { field: 'min_num', width: 110, title: '最小数量', edit: 'text' },
-                    { field: 'max_num', width: 110, title: '最大数量', edit: 'text' },
-                    { field: 'sort', width: 90, title: '排序', edit: 'text' },
+                    { field: 'id', width: 80, title: 'ID',sort: false },
+                    { field: 'title', minWidth: 160, title: '物品名称',sort: false },
+                    { field: 'images', minWidth: 120, title: '物品图片', search: false, templet: ea.table.image,sort: false },
+                    { field: 'value_min', width: 110, title: '价值下限',sort: false },
+                    { field: 'value_max', width: 110, title: '价值上限',sort: false },
+                    { field: 'probability', width: 100, title: '概率', edit: 'text',sort: false },
+                    { field: 'min_num', width: 110, title: '最小数量', edit: 'text',sort: false },
+                    { field: 'max_num', width: 110, title: '最大数量', edit: 'text',sort: false },
+                    { field: 'sort', width: 90, title: '排序', edit: 'text',sort: false },
                     {
                         width: 120,
                         title: '操作',
@@ -256,6 +275,34 @@ ea.listen();
         },
         edit_wp: function () { 
             ea.listen(); 
+        },
+
+        recycle_log: function () {
+            ea.table.render({
+                init: recycle_init,
+                totalRow: true,
+                toolbar: ['refresh'],
+                cols: [[
+                    { type: "checkbox" },
+                    { field: 'id', width: 80, title: 'ID', sort: false },
+                    { field: 'open_id', minWidth: 150, title: '用户open_id', sort: false },
+                    { field: 'item_id', width: 100, title: '物品ID', sort: false },
+                    { field: 'item_title', minWidth: 120, title: '物品名称', sort: false },
+                    { field: 'change_num', width: 100, title: '回收数量', sort: false },
+                    { field: 'coin_num', width: 100, title: '获得金币', sort: false },
+                    { field: 'exp', width: 100, title: '经验值', sort: false },
+                    { field: 'mark', minWidth: 150, title: '备注说明', search: false, sort: false,
+                        templet: function(d) {
+                            return '<div style="white-space: pre-wrap; word-break: break-word;">' + (d.mark || '') + '</div>';
+                        }
+                    },
+                    { field: 'create_time', width: 180, title: '创建时间', sort: false },
+                ]],
+                search: ['open_id'],
+            });
+
+            ea.table.listenEdit(recycle_init, 'currentTable', recycle_init.table_render_id, false);
+            ea.listen();
         },
     };
 

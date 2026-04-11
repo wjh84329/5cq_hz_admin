@@ -8,6 +8,34 @@
      </div>
 
      <div class="layui-form-item">
+         <label class="layui-form-label required">物品最小价值</label>
+         <div class="layui-input-block">
+             <input type="number" name="value_min" step="1" min="0" class="layui-input" lay-verify="required" placeholder="请输入物品最小价值" value="{$list.value_min|default='0'}">
+         </div>
+     </div>
+
+     <div class="layui-form-item">
+         <label class="layui-form-label required">物品最大价值</label>
+         <div class="layui-input-block">
+             <input type="number" name="value_max" step="1" min="0" class="layui-input" lay-verify="required" placeholder="请输入物品最大价值" value="{$list.value_max|default='0'}">
+         </div>
+     </div>
+
+     <div class="layui-form-item">
+         <label class="layui-form-label">经验值</label>
+         <div class="layui-input-block">
+             <input type="number" name="exp" step="1" min="0" class="layui-input" placeholder="请输入经验值" value="{$list.exp|default='0'}">
+         </div>
+     </div>
+
+     <div class="layui-form-item">
+         <label class="layui-form-label">备注说明</label>
+         <div class="layui-input-block">
+             <textarea name="mark" class="layui-textarea" placeholder="请输入备注说明，支持换行">{$list.mark|default=''}</textarea>
+         </div>
+     </div>
+
+     <div class="layui-form-item">
          <label class="layui-form-label">物品图片</label>
          <div class="layui-input-block layuimini-upload">
              <input name="images" class="layui-input layui-col-xs6" placeholder="请上传物品图片" value="{$list.images|default=''}">

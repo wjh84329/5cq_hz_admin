@@ -837,6 +837,7 @@ class Kill extends BaseController
         }, $draws)));
 
         $itemRows = Db::table('hz_kill_wp')
+            ->field('id,title,images,value_min,value_max,exp,mark')
             ->whereIn('id', $itemIds)
             ->select()
             ->toArray();
@@ -1099,7 +1100,7 @@ class Kill extends BaseController
         $itemIds = array_unique(array_column($list, 'item_id'));
         if (!empty($itemIds)) {
             $itemRows = Db::table('hz_kill_wp')
-                ->field('id,value_min,value_max,title,images')
+                ->field('id,value_min,value_max,title,images,exp,mark')
                 ->whereIn('id', $itemIds)
                 ->select()
                 ->toArray();
@@ -1232,6 +1233,7 @@ class Kill extends BaseController
         // 查询物品配置
         $itemIds = array_unique(array_column($items, 'item_id'));
         $itemRows = Db::table('hz_kill_wp')
+            ->field('id,title,images,value_min,value_max,exp,mark')
             ->whereIn('id', $itemIds)
             ->select()
             ->toArray();
@@ -1242,6 +1244,7 @@ class Kill extends BaseController
 
         $results = [];
         $totalCoin = 0;
+        $totalExp = 0;
         $now = time();
 
         Db::startTrans();
@@ -1267,7 +1270,9 @@ class Kill extends BaseController
                 $min = max(0, (int)($cfg['value_min'] ?? 0));
                 $max = max($min, (int)($cfg['value_max'] ?? 0));
                 $coin = mt_rand($min, $max) * $num;
+                $exp = (int)($cfg['exp'] ?? 0) * $num;
                 $totalCoin += $coin;
+                $totalExp += $exp;
 
                 // 扣除背包
                 $before = (int)$bag['total_num'];
@@ -1305,6 +1310,7 @@ class Kill extends BaseController
                     'item_title' => $this->cleanUtf8((string)($cfg['title'] ?? '')),
                     'num' => $num,
                     'coin' => $coin,
+                    'exp' => $exp,
                 ];
             }
 
@@ -1332,10 +1338,21 @@ class Kill extends BaseController
                 }
             }
 
+            // 增加游戏时长（经验值）
+            if ($totalExp > 0) {
+                $incExpOk = Db::table('ul_order_user')
+                    ->where('open_id', $openId)
+                    ->inc('yxsc', $totalExp)
+                    ->update();
+                if (!$incExpOk) {
+                    throw new \Exception('增加游戏时长失败');
+                }
+            }
+
             Db::commit();
 
             $latestUser = Db::table('ul_order_user')
-                ->field('id,open_id,lv,coin_num')
+                ->field('id,open_id,lv,coin_num,yxsc')
                 ->where('open_id', $openId)
                 ->find();
 
@@ -1344,6 +1361,7 @@ class Kill extends BaseController
                 'msg' => '回收成功',
                 'data' => [
                     'total_coin' => $totalCoin,
+                    'total_exp' => $totalExp,
                     'items' => $results,
                     'user' => $latestUser,
                 ],
@@ -1456,20 +1474,27 @@ class Kill extends BaseController
         $itemMap = [];
         if (!empty($itemIds)) {
             $itemRows = Db::table('hz_kill_wp')
-                ->field('id,title')
+                ->field('id,title,exp,mark')
                 ->whereIn('id', $itemIds)
                 ->select()
                 ->toArray();
 
             foreach ($itemRows as $item) {
                 $iid = (int)($item['id'] ?? 0);
-                $itemMap[$iid] = $this->cleanUtf8((string)($item['title'] ?? ''));
+                $itemMap[$iid] = [
+                    'title' => $this->cleanUtf8((string)($item['title'] ?? '')),
+                    'exp' => (int)($item['exp'] ?? 0),
+                    'mark' => $this->cleanUtf8((string)($item['mark'] ?? '')),
+                ];
             }
         }
 
         foreach ($rows as &$row) {
             $iid = (int)($row['item_id'] ?? 0);
-            $row['item_title'] = $itemMap[$iid] ?? '';
+            $itemInfo = $itemMap[$iid] ?? ['title' => '', 'exp' => 0, 'mark' => ''];
+            $row['item_title'] = $itemInfo['title'];
+            $row['exp'] = $itemInfo['exp'];
+            $row['mark'] = $itemInfo['mark'];
             $ts = (int)($row['create_time'] ?? 0);
             $row['create_time'] = $ts > 0 ? date('Y-m-d H:i:s', $ts) : '';
         }

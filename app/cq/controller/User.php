@@ -2609,6 +2609,8 @@ class User extends BaseController
         $res = $this->addGameTime($data);
         if($res == 2){
             return json(['code' => 200, 'msg' => '请求间隔时间不足一分钟']);
+        }elseif($res == 3){
+            return json(['code' => 0, 'msg' => '今日游戏时长已达到120分钟上限']);
         }else{
             return json(['code' => 200, 'msg' => '成功']);
         }
@@ -2663,6 +2665,19 @@ class User extends BaseController
         if(count($info) > 0 && strtotime($time)-(strtotime($info[0]['update_time']))<60){
             return 2;
         }else{
+            // 检查今日时长是否已达到120分钟上限
+            $todayTotal = Db::table('yxsc')
+                ->where('open_id',$data['open_id'])
+                ->whereTime('update_time','today')
+                ->sum('yxsc') + Db::table('yxsc')
+                ->where('open_id',$data['open_id'])
+                ->whereTime('update_time','today')
+                ->sum('hf_sc');
+            
+            if($todayTotal >= 120){
+                return 3; // 返回3表示已达到每日上限
+            }
+
 //            $time = date("Y-m-d H:i:s");
             if(array_key_exists('yx_id', $data)){
                 $data['hf_sc']=1;
