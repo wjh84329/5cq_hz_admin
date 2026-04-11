@@ -1133,6 +1133,8 @@ class Kill extends BaseController
             $cfg = $itemMap[(int)$row['item_id']] ?? null;
             $row['value_min'] = $cfg ? (float)($cfg['value_min'] ?? 0) : 0;
             $row['value_max'] = $cfg ? (float)($cfg['value_max'] ?? 0) : 0;
+            $row['exp'] = $cfg ? (int)($cfg['exp'] ?? 0) : 0;
+            $row['mark'] = $cfg ? $this->cleanUtf8((string)($cfg['mark'] ?? '')) : '';
             // 兼容老接口字段
             if ($cfg && empty($row['item_title'])) {
                 $row['item_title'] = $this->cleanUtf8((string)($cfg['title'] ?? ''));
