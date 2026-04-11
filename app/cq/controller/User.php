@@ -942,6 +942,10 @@ class User extends BaseController
                 $data['title'] = '发帖回帖评论';
                 break;
             case 10:    //浏览游戏得金币
+                $info = Db::table('coin_info')->where('open_id',$data['open_id'])->where('fs','浏览游戏')->whereTime('updata_time','today')->findOrEmpty();
+                if(!empty($info)){
+                    $data['mystery'] = 0;
+                }
                 $data['coin_num'] = $operation_info['lookGame'];
                 $data['fs'] = '浏览游戏';
                 $data['code'] = 0;
@@ -1288,6 +1292,50 @@ class User extends BaseController
         }
 
         return $data;
+    }
+
+    public function checkCoin(){
+        $data = $this->request->param();
+        $type = $data['id'];
+        $isGranted = false;
+
+        if ($type == 'a' || $type == 'b' || $type == 'c' || $type == 'd'){
+            if ($type == 'a'){
+                $fs = '累计签到3天奖励';
+            }elseif($type == 'b'){
+                $fs = '累计签到7天奖励';
+            }elseif($type == 'c'){
+                $fs = '累计签到14天奖励';
+            }elseif($type == 'd'){
+                $fs = '累计签到28天奖励';
+            }
+
+            $firstDayOfMonth = Carbon::now()->startOfMonth()->toDateString();
+            $lastDayOfMonth = Carbon::now()->endOfMonth()->toDateString();
+            $info = Db::table('coin_info')->where('open_id',$data['open_id'])->where('fs', $fs)->where('updata_time', '>=', $firstDayOfMonth) // 替换 'date_column' 为你的日期字段名
+            ->where('updata_time', '<=', $lastDayOfMonth)->findOrEmpty();
+            if(!empty($info)){
+                $isGranted = true;
+            }
+        } else if ($type == 1 || $type == 2 || $type == 3 || $type == 4 || $type == 5){
+            if ($type == 2){
+                $fs = '白银宝箱';
+            }elseif($type == 3){
+                $fs = '黄金宝箱';
+            }elseif($type == 4){
+                $fs = '铂金宝箱';
+            }elseif($type == 5){
+                $fs = '钻石宝箱';
+            }elseif($type == 1){
+                $fs = '浏览游戏';
+            }
+
+            $info = Db::table('coin_info')->where('open_id',$data['open_id'])->where('fs', $fs)->whereTime('updata_time','today')->findOrEmpty();
+            if(!empty($info)){
+                $isGranted = true;
+            }
+        }
+        return json(['code'=>200,'msg'=>'成功','data'=>$isGranted]);
     }
 
     public function setCoinShare(){
