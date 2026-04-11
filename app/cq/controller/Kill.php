@@ -1342,12 +1342,30 @@ class Kill extends BaseController
 
             // 增加游戏时长（经验值）
             if ($totalExp > 0) {
-                $incExpOk = Db::table('ul_order_user')
+                // 新增或更新 yxsc 记录（无上限）
+                $todayRecord = Db::table('yxsc')
                     ->where('open_id', $openId)
-                    ->inc('yxsc', $totalExp)
-                    ->update();
-                if (!$incExpOk) {
-                    throw new \Exception('增加游戏时长失败');
+                    ->whereTime('update_time','today')
+                    ->findOrEmpty();
+                
+                if ($todayRecord) {
+                    $updateOk = Db::table('yxsc')
+                        ->where('id', (int)$todayRecord['id'])
+                        ->inc('yxsc', $totalExp)
+                        ->update();
+                    if (!$updateOk) {
+                        throw new \Exception('更新游戏时长记录失败');
+                    }
+                } else {
+                    $insertOk = Db::table('yxsc')->insert([
+                        'open_id' => $openId,
+                        'yxsc' => $totalExp,
+                        'create_time' => $now,
+                        'update_time' => $now,
+                    ]);
+                    if (!$insertOk) {
+                        throw new \Exception('新增游戏时长记录失败');
+                    }
                 }
             }
 
