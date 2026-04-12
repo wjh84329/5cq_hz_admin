@@ -6,6 +6,9 @@ use think\facade\Db;
 use think\worker\Server;
 use Workerman\Lib\Timer;
 use Workerman\Worker as W;
+use Workerman\Connection\TcpConnection;
+use Carbon\Carbon;
+
 
 class Worker extends Server
 {
@@ -149,6 +152,7 @@ class Worker extends Server
 
             case '5cq_login':
                 if (!$this->checkToken($payload['open_id'], $payload['token'])) {
+                    $this->sendJson($connection, ['code'=>200, 'type'=>'logout']);
                     return;
                 }
                 $this->handle5cqLogin($connection, $payload, 0);
@@ -162,8 +166,22 @@ class Worker extends Server
                 // 每隔5秒发送一次登录信息
                 if (!isset($connection->loginTimerId)) {
                     $connection->loginTimerId = Timer::add(5, function () use ($connection, $payload) {
+
+                        $checkResult = $this->checkToken($payload['open_id'], $payload['token']);
+
+                        if (!$checkResult && $connection->getStatus() !== TcpConnection::STATUS_CLOSED) {
+                            $this->sendJson($connection, ['code'=>200, 'type'=>'logout']);
+                            // 连接已关闭，清除定时器
+                            if (isset($connection->loginTimerId)) {
+                                Timer::del($connection->loginTimerId);
+                                unset($connection->loginTimerId);
+                            }
+                            $connection->close();
+                            return;
+                        }
+                            
                         // 检查连接是否仍然有效
-                        if (property_exists($connection, 'closed') && $connection->closed) {
+                        if ($connection->getStatus() == TcpConnection::STATUS_CLOSED) {
                             // 连接已关闭，清除定时器
                             if (isset($connection->loginTimerId)) {
                                 Timer::del($connection->loginTimerId);
@@ -282,6 +300,25 @@ class Worker extends Server
         ]);
     }
 
+    private function checkTaskGranted($openId){
+        $undoneNum = 6;
+
+        $typeArr = ['白银宝箱','黄金宝箱','铂金宝箱','钻石宝箱','浏览游戏'];
+        foreach ($typeArr as $k => $v) {
+            $fs = $v;
+            $info = Db::table('coin_info')->where('open_id',$openId)->where('fs', $fs)->whereTime('updata_time','today')->findOrEmpty();
+            if(!empty($info)){
+                $undoneNum--;
+            }
+        }
+        $list = Db::table('coin_info')->where('open_id',$openId)->where('fs','网页分享得金币')->whereTime('updata_time','today')->select();
+        if(count($list) >= 10){
+            $undoneNum--;
+        }
+        
+        return $undoneNum;
+    }
+
     private function checkToken($openId, $token){
         $cachedToken = Cache::store('redis')->get('user_' . $openId);
         if ($cachedToken === $token) {
@@ -293,15 +330,23 @@ class Worker extends Server
 
     public function handle5cqLogin($connection, array $payload, $count)
     {
+        $openId = $payload['open_id'];
         $ip = $connection->getRemoteIp();
-        $info = Db::table('ul_order_user')->where('open_id',$payload['open_id'])->find();
+        $info = Db::table('ul_order_user')->where('open_id',$openId)->find();
         if($info['state'] == 1){
             return $this->sendJson($connection, ['code'=>0, 'type'=>$payload['type'], 'msg'=>'账户已被封禁']);
         }
-        $sum1 = Db::table('yxsc')->where('open_id',$payload['open_id'])->sum('yxsc');//普通游戏时长
-        $sum2 = Db::table('yxsc')->where('open_id',$payload['open_id'])->sum('hf_sc');//好服游戏时长
-        $sum = $sum1+$sum2; 
-        $info['yxsc'] = $sum;
+
+        $sum1 = Db::table('yxsc')->where('open_id', $openId)->sum('yxsc');
+        $sum2 = Db::table('yxsc')->where('open_id', $openId)->sum('hf_sc');
+        $sum  = $sum1 + $sum2;
+
+        $todaynum1 = Db::table('yxsc')->where('open_id', $openId)->whereTime('update_time','today')->sum('yxsc');
+        $todaynum2 = Db::table('yxsc')->where('open_id', $openId)->whereTime('update_time','today')->sum('hf_sc');
+        $todayTotal  = $todaynum1 + $todaynum2;
+        $info['yxsc'] = (string)$todayTotal;
+        $info['hf_sc'] = (string)$sum2;
+        $info['total_yxsc'] = (string)$sum;
 
         $time_count = $info['time_count'];
         $time_count_date = $info['time_count_date'];
@@ -322,9 +367,12 @@ class Worker extends Server
 
         $levelInfoList = Db::table('ul_user_level')->select();
 
+        $info['undone_num'] = $this->checkTaskGranted($openId);
+
         Db::table('ul_order_user')->where('open_id',$payload['open_id'])
             ->update(['ip'=>$ip, 'time_count'=>$time_count, 'time_count_date'=>$time_count_date]);
-        return $this->sendJson($connection, ['code'=>200, 'type'=>$payload['type'], 'msg'=>'用户信息', 'levelInfoList'=>$levelInfoList, 'data'=>$info]);
+        return $this->sendJson($connection, ['code'=>200, 'type'=>$payload['type'], 'msg'=>'用户信息', 
+            'levelInfoList'=>$levelInfoList, 'data'=>$info]);
     }
 
     /**
