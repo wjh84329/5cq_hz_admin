@@ -575,6 +575,8 @@ class User extends BaseController
         $data['open_id'] = $this->request->param('open_id');
         $save = Db::table('ul_user_report')->insert($data);
         if($save){
+            $userinfo = Db::table('ul_order_user')->where('open_id',$data['open_id'])->find();
+            Db::table('user_log')->insert(['log'=>'<p><span style="color:#ff0000;">会员【'.$userinfo['name'].'】</span>签到成功</p>']);
             return json(['code'=>200,'msg'=>'签到成功']);
         }else{
             return json(['code'=>0,'msg'=>'签到失败']);
@@ -852,7 +854,6 @@ class User extends BaseController
                 $data['fs'] = '签到';
                 $data['code'] = 0;
                 $data['title'] = '签到';
-                Db::table('user_log')->insert(['log'=>'<p><span style="color:#ff0000;">会员【'.$userinfo['name'].'】</span>签到成功</p>']);
                 break;
             case 2:    //签到3天奖励
                 // 获取当前月份的第一天和最后一天
