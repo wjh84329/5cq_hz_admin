@@ -1386,7 +1386,6 @@ class Kill extends BaseController
             Db::commit();
 
             $latestUser = Db::table('ul_order_user')
-                ->field('id,open_id,lv,coin_num,yxsc')
                 ->where('open_id', $openId)
                 ->find();
 
