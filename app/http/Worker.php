@@ -341,8 +341,8 @@ class Worker extends Server
         $sum2 = Db::table('yxsc')->where('open_id', $openId)->sum('hf_sc');
         $sum  = $sum1 + $sum2;
 
-        $todaynum1 = Db::table('yxsc')->where('open_id', $openId)->whereTime('update_time','today')->sum('yxsc');
-        $todaynum2 = Db::table('yxsc')->where('open_id', $openId)->whereTime('update_time','today')->sum('hf_sc');
+        $todaynum1 = Db::table('yxsc')->where('source','add_game_time')->where('open_id', $openId)->whereTime('update_time','today')->sum('yxsc');
+        $todaynum2 = Db::table('yxsc')->where('source','add_game_time')->where('open_id', $openId)->whereTime('update_time','today')->sum('hf_sc');
         $todayTotal  = $todaynum1 + $todaynum2;
         $info['yxsc'] = (string)$todayTotal;
         $info['hf_sc'] = (string)$sum2;

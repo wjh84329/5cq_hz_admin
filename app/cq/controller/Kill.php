@@ -1351,7 +1351,7 @@ class Kill extends BaseController
                     ->where('source', 'recycle')
                     ->whereTime('update_time','today')
                     ->findOrEmpty();
-                if ($todayRecord) {
+                if (!empty($todayRecord)) {
                     $updateOk = Db::table('yxsc')
                         ->where('open_id', $openId)
                         ->where('source', 'recycle')

@@ -2911,8 +2911,8 @@ class User extends BaseController
      */
     public function get_user_yxsc(){
         $data = $this->request->param();
-        $sum1 = Db::table('yxsc')->where('open_id',$data['open_id'])->whereTime('update_time','today')->sum('yxsc');//普通游戏时长
-        $sum2 = Db::table('yxsc')->where('open_id',$data['open_id'])->whereTime('update_time','today')->sum('hf_sc');//好服游戏时长
+        $sum1 = Db::table('yxsc')->where('source','add_game_time')->where('open_id',$data['open_id'])->whereTime('update_time','today')->sum('yxsc');//普通游戏时长
+        $sum2 = Db::table('yxsc')->where('source','add_game_time')->where('open_id',$data['open_id'])->whereTime('update_time','today')->sum('hf_sc');//好服游戏时长
         $sum = $sum1+$sum2;
         return json(['code' => 200, 'msg' => '成功','data'=>$sum]);
     }
