@@ -1345,6 +1345,7 @@ class Kill extends BaseController
                 // 新增或更新 yxsc 记录（无上限）
                 $todayRecord = Db::table('yxsc')
                     ->where('open_id', $openId)
+                    ->where('source', 'recycle')
                     ->whereTime('update_time','today')
                     ->findOrEmpty();
                 if ($todayRecord) {
