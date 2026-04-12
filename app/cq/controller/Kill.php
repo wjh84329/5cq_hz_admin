@@ -1347,7 +1347,6 @@ class Kill extends BaseController
                     ->where('open_id', $openId)
                     ->whereTime('update_time','today')
                     ->findOrEmpty();
-                
                 if ($todayRecord) {
                     $updateOk = Db::table('yxsc')
                         ->where('open_id', $openId)
@@ -1361,9 +1360,23 @@ class Kill extends BaseController
                     $insertOk = Db::table('yxsc')->insert([
                         'open_id' => $openId,
                         'yxsc' => $totalExp,
+                        'update_time' => date('Y-m-d H:i:s'),
                     ]);
                     if (!$insertOk) {
                         throw new \Exception('新增游戏时长记录失败');
+                    }
+                }
+                // 刷新VIP等级
+                $lvList = Db::table('ul_user_level')->select();
+                $zsc1 = Db::table('yxsc')->where('open_id', $openId)->sum('yxsc');
+                $zsc2 = Db::table('yxsc')->where('open_id', $openId)->sum('hf_sc');
+                $zsc = $zsc1 + $zsc2;
+                Db::table('ul_order_user')->where('open_id', $openId)->update(['lv' => '']);
+                $sc = intval($zsc / 60);
+                foreach ($lvList as $aa) {
+                    if ($sc <= $aa['level_time']) {
+                        Db::table('ul_order_user')->where('open_id', $openId)->update(['lv' => $aa['level_name']]);
+                        break;
                     }
                 }
             }

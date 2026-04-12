@@ -348,12 +348,23 @@ class Kill extends AdminController
             $maxMap = $this->request->param('max_num/a', []);
 
             $itemIds = array_unique(array_filter(array_map('intval', (array)$itemIds)));
-            if (empty($itemIds)) {
-                return json(['code' => 0, 'msg' => '请至少选择一个物品']);
-            }
-
             $time = time();
 
+            // 先查出当前所有已配置的物品
+            $oldItems = Db::table('ul_kill_gw_item')
+                ->where('gw_id', $id)
+                ->column('item_id');
+
+            // 需要删除的（之前有现在没勾选的）
+            $toDelete = array_diff($oldItems, $itemIds);
+            if (!empty($toDelete)) {
+                Db::table('ul_kill_gw_item')
+                    ->where('gw_id', $id)
+                    ->whereIn('item_id', $toDelete)
+                    ->delete();
+            }
+
+            // 需要新增或更新的
             foreach ($itemIds as $itemId) {
                 $prob = isset($probMap[$itemId]) ? (int)$probMap[$itemId] : 0;
                 $minNum = isset($minMap[$itemId]) ? (int)$minMap[$itemId] : 1;
