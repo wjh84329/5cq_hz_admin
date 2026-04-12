@@ -560,6 +560,9 @@ class Worker extends Server
         $sum1 = Db::table('yxsc')->where('open_id', $openId)->sum('yxsc');
         $sum2 = Db::table('yxsc')->where('open_id', $openId)->sum('hf_sc');
         $sum  = $sum1 + $sum2;
+        $todaynum1 = Db::table('yxsc')->where('source','add_game_time')->where('open_id', $openId)->whereTime('update_time','today')->sum('yxsc');
+        $todaynum2 = Db::table('yxsc')->where('source','add_game_time')->where('open_id', $openId)->whereTime('update_time','today')->sum('hf_sc');
+        $todayTotal  = $todaynum1 + $todaynum2;
 
         $this->sendJson($connection, [
             'type' => 'get_user_all_yxsc',
@@ -567,7 +570,7 @@ class Worker extends Server
             'msg'  => '成功',
             'data' => [
                 'open_id'   => $openId,
-                'yxsc'      => (string)$sum1,
+                'yxsc'      => (string)$todayTotal,
                 'hf_sc'     => (string)$sum2,
                 'total_yxsc'=> (string)$sum,
             ],

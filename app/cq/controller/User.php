@@ -2768,12 +2768,12 @@ class User extends BaseController
                     $save = Db::table('yxsc')->where('open_id',$data['open_id'])->where('yx_id',$data['yx_id'])->whereTime('update_time','today')->inc('hf_sc',$data['hf_sc'])->update(['update_time'=>$time]);
                 }
             }else{
-                $count = Db::table('yxsc')->where('open_id',$data['open_id'])->where('yx_id',0)->whereTime('update_time','today')->count();//获取今日游戏总时长
+                $count = Db::table('yxsc')->where('open_id',$data['open_id'])->where('source','add_game_time')->where('yx_id',0)->whereTime('update_time','today')->count();//获取今日游戏总时长
                 $data['yxsc']=1;
                 if($count==0){
                     $save = Db::table('yxsc')->insert(['open_id'=>$data['open_id'],'yxsc'=>1,'source'=>'add_game_time','update_time'=>$time]);
                 }else{
-                    $save = Db::table('yxsc')->where('open_id',$data['open_id'])->where('yx_id',0)->whereTime('update_time','today')->inc('yxsc',$data['yxsc'])->update(['update_time'=>$time]);
+                    $save = Db::table('yxsc')->where('open_id',$data['open_id'])->where('source','add_game_time')->where('yx_id',0)->whereTime('update_time','today')->inc('yxsc',$data['yxsc'])->update(['update_time'=>$time]);
                 }
 //                $save = Db::table('yxsc')->where('open_id',$data['open_id'])->where('yx_id',0)->whereTime('update_time','today')->inc('yxsc',$data['yxsc'])->update(['update_time'=>$time]);
             }
