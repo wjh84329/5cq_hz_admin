@@ -262,26 +262,20 @@ class Worker extends Server
 
     private function sendLatestCoinRandomList($connection, $that)
     {
-        // 先取最新100条
-        $rows = Db::table('coin_info')->where('coin_num',">",0)->order('id desc')->limit(100)->select()->toArray();
+        // 获取 user_log 表最新10条记录
+        $rows = Db::table('user_log')->order('id desc')->limit(10)->select()->toArray();
         if (empty($rows)) {
             return ;
         }
 
-        // 随机打散，再取前10条
-        shuffle($rows);
+        // 反转数组使其按时间升序排列（最新的在最后）
+        $rows = array_reverse($rows);
         $result = [];
-        $picked = array_slice($rows, 0, 10);
-        foreach ($picked as $k => $v) {
-            $user = Db::table('ul_order_user')->where('open_id', $v['open_id'])->find();
-            if($v['code'] == 0){
-                $result[$k] = '用户' . $user['nickname'] . '通过' . $v['fs'] . '获得了' . $v['coin_num'] . '金币';
-            }else{
-                $result[$k] = '用户'. $user['nickname'] . '通过' . $v['fs'] . '消耗' . $v['coin_num'] . '金币';
-            }
+        foreach ($rows as $k => $v) {
+            $result[$k] = $v['log'];
         }
 
-        // 这里可以添加具体的消息内容
+        // 主动推送最新消息给用户
         $that->sendJson($connection, [
             'type' => 'latest_coin_random_list',
             'rows' => $result,

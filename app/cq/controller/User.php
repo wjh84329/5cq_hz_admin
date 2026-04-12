@@ -741,7 +741,7 @@ class User extends BaseController
      */
      public function setCoin() {
         $param = $this->request->param();
-        $data = getCoins($param);
+        $data = $this->getCoin($param);
         /*$jobId = Queue::push('app\cq\Job\AsyncJob@task1', $param);
         $iterations = 60; // 假设您希望每分钟检查60次
         $interval = 60/200; // 每次检查的间隔时间（秒）
@@ -840,6 +840,7 @@ class User extends BaseController
         $operation_info = Db::table('operation')->find(1);
         $luckyCoin = Db::table('luckyCoin')->find(1);//金币转盘配置
         $luckyPrize = Db::table('luckyPrize')->find(1);//实物转盘配置
+        $userinfo = Db::table('ul_order_user')->where('open_id',$data['open_id'])->findOrEmpty();//用户信息
 //        $data = $this->request->param();//请求参数
         switch ($data['type']){
             case 1:    //签到
@@ -851,6 +852,7 @@ class User extends BaseController
                 $data['fs'] = '签到';
                 $data['code'] = 0;
                 $data['title'] = '签到';
+                Db::table('user_log')->insert(['log'=>'<p><span style="color:#ff0000;">会员【'.$userinfo['name'].'】</span>签到成功</p>']);
                 break;
             case 2:    //签到3天奖励
                 // 获取当前月份的第一天和最后一天
@@ -865,6 +867,7 @@ class User extends BaseController
                 $data['fs'] = '累计签到3天奖励';
                 $data['code'] = 0;
                 $data['title'] = '累计签到3天奖励';
+                Db::table('user_log')->insert(['log'=>'<p><span style="color:#ff0000;">会员【'.$userinfo['name'].'】</span>成功领取<span style="color:#4AAC4E;">累计签到三天奖励</span></p>']);
                 break;
             case 3:    //签到7天奖励
                 $firstDayOfMonth = Carbon::now()->startOfMonth()->toDateString();
@@ -878,6 +881,7 @@ class User extends BaseController
                 $data['fs'] = '累计签到7天奖励';
                 $data['code'] = 0;
                 $data['title'] = '累计签到7天奖励';
+                Db::table('user_log')->insert(['log'=>'<p><span style="color:#ff0000;">会员【'.$userinfo['name'].'】</span>成功领取<span style="color:#4AAC4E;">累计签到七天奖励</span></p>']);
                 break;
             case 4:    //签到14天奖励
                 $firstDayOfMonth = Carbon::now()->startOfMonth()->toDateString();
@@ -891,6 +895,7 @@ class User extends BaseController
                 $data['fs'] = '累计签到14天奖励';
                 $data['code'] = 0;
                 $data['title'] = '累计签到14天奖励';
+                Db::table('user_log')->insert(['log'=>'<p><span style="color:#ff0000;">会员【'.$userinfo['name'].'】</span>成功领取<span style="color:#4AAC4E;">累计签到十四天奖励</span></p>']);
                 break;
             case 5:    //签到28天奖励
                 $firstDayOfMonth = Carbon::now()->startOfMonth()->toDateString();
@@ -904,6 +909,7 @@ class User extends BaseController
                 $data['fs'] = '累计签到28天奖励';
                 $data['code'] = 0;
                 $data['title'] = '累计签到28天奖励';
+                Db::table('user_log')->insert(['log'=>'<p><span style="color:#ff0000;">会员【'.$userinfo['name'].'】</span>成功领取<span style="color:#4AAC4E;">累计签到二十八天奖励</span></p>']);
                 break;
             case 6:    //绑定手机
                 $info = Db::table('coin_info')->where('open_id',$data['open_id'])->where('fs','绑定手机')->findOrEmpty();
@@ -914,6 +920,7 @@ class User extends BaseController
                 $data['fs'] = '绑定手机';
                 $data['code'] = 0;
                 $data['title'] = '绑定手机';
+                Db::table('user_log')->insert(['log'=>'<p><span style="color:#ff0000;">会员【'.$userinfo['name'].'】</span>绑定手机成功</p>']);
                 break;
             case 7:    //实名认证
                 $info = Db::table('coin_info')->where('open_id',$data['open_id'])->where('fs','实名认证')->findOrEmpty();
@@ -924,6 +931,7 @@ class User extends BaseController
                 $data['fs'] = '实名认证';
                 $data['code'] = 0;
                 $data['title'] = '实名认证';
+                Db::table('user_log')->insert(['log'=>'<p><span style="color:#ff0000;">会员【'.$userinfo['name'].'】</span>实名认证成功</p>']);
                 break;
             case 8:    //注册立得金币
                 $info = Db::table('coin_info')->where('open_id',$data['open_id'])->where('fs','注册')->findOrEmpty();
@@ -934,12 +942,14 @@ class User extends BaseController
                 $data['fs'] = '注册';
                 $data['code'] = 0;
                 $data['title'] = '注册';
+                Db::table('user_log')->insert(['log'=>'<p><span style="color:#ff0000;">会员【'.$userinfo['name'].'】</span>注册成功</p>']);
                 break;
             case 9:    //发帖回帖评论得金币
                 $data['coin_num'] = $operation_info['postCoin'];
                 $data['fs'] = '发帖回帖评论';
                 $data['code'] = 0;
                 $data['title'] = '发帖回帖评论';
+                Db::table('user_log')->insert(['log'=>'<p><span style="color:#ff0000;">会员【'.$userinfo['name'].'】</span>发帖回帖成功获得<span style="color:#4AAC4E;">'.$data['coin_num'].'金币</span></p>']);
                 break;
             case 10:    //浏览游戏得金币
                 $info = Db::table('coin_info')->where('open_id',$data['open_id'])->where('fs','浏览游戏')->whereTime('updata_time','today')->findOrEmpty();
@@ -950,6 +960,7 @@ class User extends BaseController
                 $data['fs'] = '浏览游戏';
                 $data['code'] = 0;
                 $data['title'] = '浏览游戏';
+                Db::table('user_log')->insert(['log'=>'<p><span style="color:#ff0000;">会员【'.$userinfo['name'].'】</span>访问了游戏<span style="color:#4AAC4E;">'.$data['gameName'].'</span></p>']);
                 break;
             case 11:    //白银宝箱
                 $info = Db::table('coin_info')->where('open_id',$data['open_id'])->where('fs','白银宝箱')->whereTime('updata_time','today')->findOrEmpty();
@@ -959,6 +970,7 @@ class User extends BaseController
                     $data['fs'] = '白银宝箱';
                     $data['code'] = 0;
                     $data['title'] = '白银宝箱';
+                    Db::table('user_log')->insert(['log'=>'<p><span style="color:#ff0000;">会员【'.$userinfo['name'].'】</span>成功领取<span style="color:#4AAC4E;">白银宝箱</span></p>']);
                 }else{
                     $data['bylq'] = 1;
                 }
@@ -971,6 +983,7 @@ class User extends BaseController
                     $data['fs'] = '黄金宝箱';
                     $data['code'] = 0;
                     $data['title'] = '黄金宝箱';
+                    Db::table('user_log')->insert(['log'=>'<p><span style="color:#ff0000;">会员【'.$userinfo['name'].'】</span>成功领取<span style="color:#4AAC4E;">黄金宝箱</span></p>']);
                 }else{
                     $data['hjlq'] = 1;
                 }
@@ -983,6 +996,7 @@ class User extends BaseController
                     $data['fs'] = '铂金宝箱';
                     $data['code'] = 0;
                     $data['title'] = '铂金宝箱';
+                    Db::table('user_log')->insert(['log'=>'<p><span style="color:#ff0000;">会员【'.$userinfo['name'].'】</span>成功领取<span style="color:#4AAC4E;">铂金宝箱</span></p>']);
                 }else{
                     $data['bjlq'] = 1;
                 }
@@ -995,6 +1009,7 @@ class User extends BaseController
                     $data['fs'] = '钻石宝箱';
                     $data['code'] = 0;
                     $data['title'] = '钻石宝箱';
+                    Db::table('user_log')->insert(['log'=>'<p><span style="color:#ff0000;">会员【'.$userinfo['name'].'】</span>成功领取<span style="color:#4AAC4E;">钻石宝箱</span></p>']);
                 }else{
                     $data['zslq'] = 1;
                 }
@@ -1084,6 +1099,7 @@ class User extends BaseController
                 $data['code'] = 0;
                 $data['title'] = $concatenatedString;
                 unset($data['state']);
+                Db::table('user_log')->insert(['log'=>'<p><span style="color:#ff0000;">会员【'.$userinfo['name'].'】</span>抽中了<span style="color:#4AAC4E;">'.$data['title'].'</span></p>']);
                 break;
             /*case 25:    //实物奖品1
                 $coin = explode('金币',$luckyCoin['luckyPrizeItemTitle1']);
@@ -1156,6 +1172,7 @@ class User extends BaseController
                 $data['fs'] = '红包奖励';
                 $data['code'] = 0;
                 $data['title'] = '红包奖励';
+                Db::table('user_log')->insert(['log'=>'<p><span style="color:#ff0000;">会员【'.$userinfo['name'].'】</span>成功领取<span style="color:#4AAC4E;">红包奖励</span></p>']);
                 break;
             case 34:    //每日盲盒
                 $info = Db::table('coin_info')->where('open_id',$data['open_id'])->where('fs','每日盲盒')->where('updata_time','today')->findOrEmpty();
@@ -1167,6 +1184,7 @@ class User extends BaseController
                 $data['fs'] = '每日盲盒';
                 $data['code'] = 0;
                 $data['title'] = '每日盲盒';
+                Db::table('user_log')->insert(['log'=>'<p><span style="color:#ff0000;">会员【'.$userinfo['name'].'】</span>成功领取<span style="color:#4AAC4E;">每日盲盒</span></p>']);
                 break;
             case 35:    //特色好服任务一  额外参数：yx_id
                 $info = Db::table('coin_info')->where('open_id',$data['open_id'])->where('fs','游戏在线时长60分钟')->where('updata_time','today')->findOrEmpty();
@@ -1177,6 +1195,7 @@ class User extends BaseController
                 $data['fs'] = '游戏在线时长60分钟';
                 $data['code'] = 0;
                 $data['title'] = '任务一';
+                Db::table('user_log')->insert(['log'=>'<p><span style="color:#ff0000;">会员【'.$userinfo['name'].'】</span>成功完成特色好服<span style="color:#4AAC4E;">游戏在线时长60分钟任务</span></p>']);
                 break;
             case 36:    //特色好服任务二  额外参数：yx_id
                 $info = Db::table('coin_info')->where('open_id',$data['open_id'])->where('fs','游戏在线时长120分钟')->where('updata_time','today')->findOrEmpty();
@@ -1187,6 +1206,7 @@ class User extends BaseController
                 $data['fs'] = '游戏在线时长120分钟';
                 $data['code'] = 0;
                 $data['title'] = '任务二';
+                Db::table('user_log')->insert(['log'=>'<p><span style="color:#ff0000;">会员【'.$userinfo['name'].'】</span>成功完成特色好服<span style="color:#4AAC4E;">游戏在线时长120分钟任务</span></p>']);
                 break;
             case 37:    //特色好服任务三  额外参数：yx_id
                 $info = Db::table('coin_info')->where('open_id',$data['open_id'])->where('fs','游戏评分')->where('updata_time','today')->findOrEmpty();
@@ -1197,6 +1217,7 @@ class User extends BaseController
                 $data['fs'] = '游戏评分';
                 $data['code'] = 0;
                 $data['title'] = '任务三';
+                Db::table('user_log')->insert(['log'=>'<p><span style="color:#ff0000;">会员【'.$userinfo['name'].'】</span>成功完成特色好服<span style="color:#4AAC4E;">游戏评分任务</span></p>']);
                 break;
             case 38:    //金币商城兑换物品  额外参数：goods_id
                 $info = Db::table('ul_coin_goods')->where('id',$data['goods_id'])->findOrEmpty();
@@ -1204,18 +1225,21 @@ class User extends BaseController
                 $data['fs'] = '物品兑换';
                 $data['code'] = 1;
                 $data['title'] = $info['title'];
+                Db::table('user_log')->insert(['log'=>'<p><span style="color:#ff0000;">会员【'.$userinfo['name'].'】</span>成功兑换了<span style="color:#4AAC4E;">'.$info['title'].'</span></p>']);
                 break;
             case 39:    //活动赛事竞猜红方投注  额外参数：coin_num  sbk_id
                 $data['fs'] = '比赛竞猜';
                 $data['code'] = 1;
                 $data['tz_type'] = 1;
                 $data['title'] = '红方投注';
+                Db::table('user_log')->insert(['log'=>'<p><span style="color:#ff0000;">会员【'.$userinfo['name'].'】</span>成功进行了<span style="color:#4AAC4E;">沙巴克红方投注</span></p>']);
                 break;
             case 40:    //活动赛事竞猜蓝方投注  额外参数：coin_num  sbk_id
                 $data['fs'] = '比赛竞猜';
                 $data['code'] = 1;
                 $data['tz_type'] = 2;
                 $data['title'] = '蓝方投注';
+                Db::table('user_log')->insert(['log'=>'<p><span style="color:#ff0000;">会员【'.$userinfo['name'].'】</span>成功进行了<span style="color:#4AAC4E;">沙巴克蓝方投注</span></p>']);
                 break;
             case 41:    //活动赛事竞猜结算  额外参数：  sbk_id
                 $sbkinfo = Db::table("ul_sbk")->where('id',$data['sbk_id'])->findOrEmpty();
@@ -1225,6 +1249,7 @@ class User extends BaseController
                 $data['code'] = 0;
                 $data['tz_type'] = 2;
                 $data['title'] = '竞猜奖励';
+                Db::table('user_log')->insert(['log'=>'<p><span style="color:#ff0000;">会员【'.$userinfo['name'].'】</span>成功获得了<span style="color:#4AAC4E;">沙巴克竞猜奖励</span></p>']);
                 break;
             case 42:    //白银宝箱
                 $info = Db::table('coin_info')->where('open_id',$data['open_id'])->where('fs','白银宝箱')->whereTime('updata_time','today')->findOrEmpty();
@@ -1234,6 +1259,7 @@ class User extends BaseController
                     $data['fs'] = '网页白银宝箱';
                     $data['code'] = 0;
                     $data['title'] = '网页白银宝箱';
+                    Db::table('user_log')->insert(['log'=>'<p><span style="color:#ff0000;">会员【'.$userinfo['name'].'】</span>成功领取了<span style="color:#4AAC4E;">白银宝箱</span></p>']);
                 }else{
                     $data['bylq'] = 1;
                 }
@@ -1246,6 +1272,7 @@ class User extends BaseController
                     $data['fs'] = '网页黄金宝箱';
                     $data['code'] = 0;
                     $data['title'] = '网页黄金宝箱';
+                    Db::table('user_log')->insert(['log'=>'<p><span style="color:#ff0000;">会员【'.$userinfo['name'].'】</span>成功领取了<span style="color:#4AAC4E;">黄金宝箱</span></p>']);
                 }else{
                     $data['hjlq'] = 1;
                 }
@@ -1258,6 +1285,7 @@ class User extends BaseController
                     $data['fs'] = '网页铂金宝箱';
                     $data['code'] = 0;
                     $data['title'] = '网页铂金宝箱';
+                    Db::table('user_log')->insert(['log'=>'<p><span style="color:#ff0000;">会员【'.$userinfo['name'].'】</span>成功领取了<span style="color:#4AAC4E;">铂金宝箱</span></p>']);
                 }else{
                     $data['bjlq'] = 1;
                 }
@@ -1270,6 +1298,7 @@ class User extends BaseController
                     $data['fs'] = '网页钻石宝箱';
                     $data['code'] = 0;
                     $data['title'] = '网页钻石宝箱';
+                    Db::table('user_log')->insert(['log'=>'<p><span style="color:#ff0000;">会员【'.$userinfo['name'].'】</span>成功领取了<span style="color:#4AAC4E;">钻石宝箱</span></p>']);
                 }else{
                     $data['zslq'] = 1;
                 }
@@ -1281,6 +1310,7 @@ class User extends BaseController
                     $data['fs'] = '网页分享得金币';
                     $data['code'] = 0;
                     $data['title'] = '网页分享得金币';
+                    Db::table('user_log')->insert(['log'=>'<p><span style="color:#ff0000;">会员【'.$userinfo['name'].'】</span>成功通过<span style="color:#4AAC4E;">网页分享</span>获得了金币<span style="color:#4AAC4E;"></span></p>']);
                 }else{
                     $data['coin_num'] = 0;
                     $data['fs'] = '网页分享得金币';

@@ -939,6 +939,8 @@ class Kill extends BaseController
                 ->where('open_id', $openId)
                 ->find();
 
+    
+            Db::table('user_log')->insert(['log'=>'<p><span style="color:#ff0000;">会员【'.$user['name'].'】</span>在金币打怪中击败了<span style="color:#FFA500;">'.$monster['title'].'</span></p>']);
             return json([
                 'code' => 200,
                 'msg' => '抽奖成功',
