@@ -1350,6 +1350,7 @@ class Kill extends BaseController
                 if ($todayRecord) {
                     $updateOk = Db::table('yxsc')
                         ->where('open_id', $openId)
+                        ->where('source', 'recycle')
                         ->whereTime('update_time','today')
                         ->inc('yxsc', $totalExp)
                         ->update();
@@ -1360,6 +1361,7 @@ class Kill extends BaseController
                     $insertOk = Db::table('yxsc')->insert([
                         'open_id' => $openId,
                         'yxsc' => $totalExp,
+                        'source' => 'recycle',
                         'update_time' => date('Y-m-d H:i:s'),
                     ]);
                     if (!$insertOk) {
