@@ -960,7 +960,6 @@ class User extends BaseController
                 $data['fs'] = '浏览游戏';
                 $data['code'] = 0;
                 $data['title'] = '浏览游戏';
-                Db::table('user_log')->insert(['log'=>'<p><span style="color:#ff0000;">会员【'.$userinfo['name'].'】</span>访问了游戏<span style="color:#4AAC4E;">'.$data['gameName'].'</span></p>']);
                 break;
             case 11:    //白银宝箱
                 $info = Db::table('coin_info')->where('open_id',$data['open_id'])->where('fs','白银宝箱')->whereTime('updata_time','today')->findOrEmpty();
@@ -3706,5 +3705,13 @@ class User extends BaseController
         }*/
 
         return $transformedArray;
+    }
+
+    public function setUserLog(){
+        $data = $this->request->param();
+        $name = $data['name'];
+        $gameName = $data['gameName'];
+        Db::table('user_log')->insert(['log'=>'<p><span style="color:#ff0000;">会员【'.$name.'】</span>访问了游戏<span style="color:#4AAC4E;">'.$gameName.'</span></p>']);
+        return json(['code' => 200, 'msg' => '成功']);
     }
 }
