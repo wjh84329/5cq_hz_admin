@@ -1316,6 +1316,7 @@ class Kill extends BaseController
                     'coin' => $coin,
                     'exp' => $exp,
                 ];
+                Db::table('user_log')->insert(['log'=>'<p><span style="color:#ff0000;">会员【'.$user['name'].'】</span>在线回收了<span style="color:#FFA500;">'.$cfg['title'].'</span> x'.$num.'</p>']);
             }
 
             // 增加金币
