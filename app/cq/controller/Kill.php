@@ -665,16 +665,15 @@ class Kill extends BaseController
     private function pickRewardCount(int $maxAvailable): int
     {
         $maxAvailable = max(1, min(5, $maxAvailable));
-
         $rand = mt_rand(1, 100);
 
-        if ($rand <= 35) {
+        if ($rand <= 50) {
             $count = 1;
-        } elseif ($rand <= 65) {
+        } elseif ($rand <= 80) {
             $count = 2;
-        } elseif ($rand <= 83) {
+        } elseif ($rand <= 95) {
             $count = 3;
-        } elseif ($rand <= 93) {
+        } elseif ($rand <= 99) {
             $count = 4;
         } else {
             $count = 5;
@@ -798,27 +797,41 @@ class Kill extends BaseController
 
         
 
-        // 本次随机掉落 1-5 个物品，且相同物品只能出现一次
-        // 绝对概率掉落实现
+        // 权重抽奖实现，必掉1~5个物品且不重复，probability字段为权重
         $draws = [];
         $availablePool = array_values($dropPool);
+        $drawCount = $this->pickRewardCount(count($availablePool));
+        $drawCount = max(1, min($drawCount, count($availablePool)));
 
-        // 1. 先独立判定每个物品是否掉落
         $hitItems = [];
-        foreach ($availablePool as $item) {
-            $prob = max(0, (int)($item['probability'] ?? 0));
-            // 以1000为分母，概率为千分比
-            if ($prob > 0 && mt_rand(1, 1000) <= $prob) {
-                $hitItems[] = $item;
+        $pool = $availablePool;
+        for ($i = 0; $i < $drawCount && !empty($pool); $i++) {
+            // 计算总权重
+            $totalWeight = 0;
+            foreach ($pool as $item) {
+                $totalWeight += max(0, (int)($item['probability'] ?? 0));
             }
+            if ($totalWeight <= 0) {
+                // 所有权重为0，随机一个
+                $idx = array_rand($pool);
+            } else {
+                $rand = mt_rand(1, $totalWeight);
+                $acc = 0;
+                foreach ($pool as $k => $item) {
+                    $w = max(0, (int)($item['probability'] ?? 0));
+                    $acc += $w;
+                    if ($rand <= $acc) {
+                        $idx = $k;
+                        break;
+                    }
+                }
+            }
+            $hitItems[] = $pool[$idx];
+            unset($pool[$idx]);
+            $pool = array_values($pool);
         }
 
-        // 2. 随机打乱，最多掉落1~5个（不重复）
-        shuffle($hitItems);
-        $drawCount = $this->pickRewardCount(count($hitItems));
-        $hitItems = array_slice($hitItems, 0, $drawCount);
-
-        // 3. 生成掉落结果
+        // 生成掉落结果
         foreach ($hitItems as $item) {
             $itemId = (int)($item['item_id'] ?? 0);
             $minNum = max(1, (int)($item['min_num'] ?? 1));
