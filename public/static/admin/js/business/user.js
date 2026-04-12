@@ -70,7 +70,7 @@ define(["jquery", "easy-admin"], function ($, ea) {
                     // { field: 'avatar',  title: '头像', templet: ea.table.image},
                     { field: 'coin_num',  title: '金币数量', edit:'text'},
                     { field: 'money',  title: '余额', edit:'text'},
-                    { field: 'lv',  title: '用户等级'},
+                    { field: 'lv',  title: '用户等级', edit:'text'},
                     { field: 'state', title: '是否封禁', width: 120,selectList: { 0: '启用', 1: '禁用' },tips:'是|否', templet: ea.table.switch },
                     /*{ field: 'sign',  title: '个性签名',
                         valueParser(value, data) {
