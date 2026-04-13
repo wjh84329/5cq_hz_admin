@@ -1835,9 +1835,27 @@ class User extends BaseController
             ->where('code',0)
             ->order('updata_time desc')
             ->select()->toArray();
+
+        // 提取所有open_id
+        $openIds = array_column($list, 'open_id');
+        
+        // 一次性查询所有用户信息
+        $userMap = [];
+        if (!empty($openIds)) {
+            $users = Db::table('ul_order_user')
+                ->whereIn('open_id', $openIds)
+                ->field('open_id, nickname')
+                ->select()->toArray();
+            
+            // 构建open_id到nickname的映射
+            foreach ($users as $user) {
+                $userMap[$user['open_id']] = $user['nickname'];
+            }
+        }
+        
+        // 循环中从映射中取值
         foreach ($list as $k => $v){
-            $user_info  = Db::table('ul_order_user')->where('open_id',$v['open_id'])->find();
-            $list[$k]['nickname'] = $user_info['nickname'];
+            $list[$k]['nickname'] = $userMap[$v['open_id']] ?? '';
         }
         return json(['code'=>200,'msg'=>'获取成功','data'=>$list]);
     }
