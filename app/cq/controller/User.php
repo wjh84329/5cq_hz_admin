@@ -1386,6 +1386,7 @@ class User extends BaseController
             $addData['code'] = 0;
             $addData['fs'] = '网页分享得金币';
             $addData['title'] = '网页分享得金币';
+            $addData['type'] = 46;
 
             Db::table('ul_order_user')
                 ->where('id', $data['id'])
