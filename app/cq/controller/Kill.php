@@ -2124,8 +2124,7 @@ class Kill extends BaseController
         $list = Db::table('coin_info')
             ->where('open_id', $openId)
             ->where('type', 46)
-            ->where('updata_time', '>=', strtotime(date('Y-m-d 00:00:00')))
-            ->where('updata_time', '<=', strtotime(date('Y-m-d 23:59:59')))
+            ->whereTime('updata_time', 'today')
             ->select()
             ->toArray();
         return json([
