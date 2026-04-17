@@ -39,7 +39,7 @@ return [
     'businessWorker'        => [
         'name'         => 'BusinessWorker',
         'count'        => 1,
-        'eventHandler' => '\think\worker\Events',
+        'eventHandler' => '\app\worker\Events',
     ],
 
 ];
