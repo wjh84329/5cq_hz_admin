@@ -137,9 +137,9 @@ class Goods extends BaseController
         if(empty($goods_info)){
             return json(['code'=>0,'msg'=>'商品不存在']);
         }
-        if($user_info['coin_num'] < $goods_info['price']){
-            return json(['code'=>0,'msg'=>'金币不足']);
-        }
+        // if($user_info['coin_num'] < $goods_info['price']){
+        //     return json(['code'=>0,'msg'=>'金币不足']);
+        // }
         $data['order_id'] = md5(time());//订单号
         $data['order_user_id'] = $user_info['id'];//下单用户id
         $data['order_user_name'] = $user_info['name'];//下单用户姓名
