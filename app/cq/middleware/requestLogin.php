@@ -34,7 +34,9 @@ class requestLogin
         'kill/red_unused_list',
         'kill/red_used_list',
         'kill/today_share_count',
-        'kill/today_share_list'
+        'kill/today_share_list',
+        'user/user_report',
+        'user/checkCoin'
     ];
     public function handle(Request $request, \Closure $next){
         // 设置 CORS 头部（通常在全局中间件或响应中设置更合适）
