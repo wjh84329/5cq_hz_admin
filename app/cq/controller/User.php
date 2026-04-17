@@ -743,7 +743,15 @@ class User extends BaseController
      */
      public function setCoin() {
         $param = $this->request->param();
-        $data = $this->getCoin($param);
+        $user_info = Db::table('ul_order_user')->where('open_id',$param['open_id'])->findOrEmpty();//用户信息
+        if(empty($user_info)){
+            return json(['code'=>0,'msg'=>'用户不存在']);
+        }else if(empty($user_info['sfz'])){
+            return json(['code'=> 0,'msg'=> '身份证信息未填写']);
+        }else if(empty($user_info['phone'])){
+            return json(['code'=> 0,'msg'=> '手机号未绑定']);
+        }
+        $data = getCoin($param);
         /*$jobId = Queue::push('app\cq\Job\AsyncJob@task1', $param);
         $iterations = 60; // 假设您希望每分钟检查60次
         $interval = 60/200; // 每次检查的间隔时间（秒）
@@ -779,6 +787,9 @@ class User extends BaseController
         if(array_key_exists('zslq', $data)){
             $info = Db::table('coin_info')->where('open_id',$data['open_id'])->where('fs','钻石宝箱')->whereTime('updata_time','today')->findOrEmpty();
             return json(['code'=>200,'msg'=>'钻石宝箱今日已领取','coinInfo'=>$info]);
+        }
+        if(array_key_exists('mygoods_lack', $data)){
+            return json(['code'=>200,'msg'=>$data['fs'].'兑换失败，金币不足']);
         }
         
         $data['real'] = $data['coin_num'];
@@ -1225,7 +1236,12 @@ class User extends BaseController
                 $data['fs'] = '物品兑换';
                 $data['code'] = 1;
                 $data['title'] = $info['title'];
-                Db::table('user_log')->insert(['log'=>'<p><span style="color:#ff0000;">会员【'.$userinfo['name'].'】</span>成功兑换了<span style="color:#4AAC4E;">'.$info['title'].'</span></p>']);
+                $userinfo = Db::table('ul_order_user')->where('open_id',$data['open_id'])->findOrEmpty();
+                if($userinfo['coin_num'] < $info['price']){
+                    $data['mygoods_lack'] = 1;
+                }else{
+                    Db::table('user_log')->insert(['log'=>'<p><span style="color:#ff0000;">会员【'.$userinfo['name'].'】</span>成功兑换了<span style="color:#4AAC4E;">'.$info['title'].'</span></p>']);
+                }
                 break;
             case 39:    //活动赛事竞猜红方投注  额外参数：coin_num  sbk_id
                 $data['fs'] = '比赛竞猜';

@@ -43,4 +43,8 @@ return [
         //      'multiplier' => 3
         //  ],
     ],
+    'mch_id'      => env('WECHAT_MCH_ID', 'your_merchant_id'),//商户ID
+    'key'         => env('WECHAT_API_KEY', 'your_api_key'),//商户密钥
+    'cert_path'   => env('WECHAT_CERT_PATH', storage_path('certs/apiclient_cert.pem')),//商户证书路径，退款等需要用到
+    'key_path'    => env('WECHAT_KEY_PATH', storage_path('certs/apiclient_key.pem')),//商户证书密钥路径，退款等需要用到
 ];

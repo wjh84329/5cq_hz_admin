@@ -150,36 +150,36 @@ class Worker extends Server
                 $this->handleBusinessOperation($connection);
                 return;
 
+
             case '5cq_login':
-                if (!$this->checkToken($payload['open_id'], $payload['token'])) {
+                $openId = isset($payload['open_id']) ? $payload['open_id'] : '';
+                $token  = isset($payload['token']) ? $payload['token'] : '';
+                if ($openId === '' || $token === '') {
+                    $this->sendJson($connection, [
+                        'code' => 0,
+                        'type' => 'logout',
+                        'msg'  => 'open_id或token不能为空',
+                    ]);
+                    return;
+                }
+                if (!$this->checkToken($openId, $token)) {
                     $this->sendJson($connection, ['code'=>200, 'type'=>'logout']);
                     return;
                 }
+                $payload['open_id'] = $openId;
+                $payload['token'] = $token;
                 $this->handle5cqLogin($connection, $payload, 0);
                 $that = $this;
                 $this->sendLatestCoinRandomList($connection, $that);
-                
                 // 将连接添加到5cq连接map中
-                $openId = $payload['open_id'];
                 $this->cqConnections[$openId] = $connection;
-                
                 // 每隔5秒发送一次登录信息
                 if (!isset($connection->loginTimerId)) {
                     $connection->loginTimerId = Timer::add(5, function () use ($connection, $payload) {
-
-                        $checkResult = $this->checkToken($payload['open_id'], $payload['token']);
-
-                        if (!$checkResult && $connection->getStatus() !== TcpConnection::STATUS_CLOSED) {
-                            $this->sendJson($connection, ['code'=>200, 'type'=>'logout']);
-                            // 连接已关闭，清除定时器
-                            if (isset($connection->loginTimerId)) {
-                                Timer::del($connection->loginTimerId);
-                                unset($connection->loginTimerId);
-                            }
-                            $connection->close();
-                            return;
-                        }
-                            
+                        $openId = isset($payload['open_id']) ? $payload['open_id'] : '';
+                        $token  = isset($payload['token']) ? $payload['token'] : '';
+                        $checkResult = $this->checkToken($openId, $token);
+                        
                         // 检查连接是否仍然有效
                         if ($connection->getStatus() == TcpConnection::STATUS_CLOSED) {
                             // 连接已关闭，清除定时器
@@ -187,6 +187,17 @@ class Worker extends Server
                                 Timer::del($connection->loginTimerId);
                                 unset($connection->loginTimerId);
                             }
+                            return;
+                        }
+                        
+                        if (!$checkResult) {
+                            $this->sendJson($connection, ['code'=>200, 'type'=>'logout']);
+                            // 先清除定时器，再关闭连接
+                            if (isset($connection->loginTimerId)) {
+                                Timer::del($connection->loginTimerId);
+                                unset($connection->loginTimerId);
+                            }
+                            $connection->close();
                             return;
                         }
                         
@@ -224,9 +235,10 @@ class Worker extends Server
             unset($this->wsWorker->uidConnections[$connection->uid]);
         }
         
-        // 从5cq连接map中移除
+        // 从5cq连接map中移除，标记为已关闭
         foreach ($this->cqConnections as $openId => $conn) {
             if ($conn === $connection) {
+                $connection->_closed_flag = true;
                 unset($this->cqConnections[$openId]);
                 break;
             }
@@ -263,13 +275,6 @@ class Worker extends Server
         Timer::add($interval, function () use ($that) {
             // 向所有5cq连接发送信息
             foreach ($that->cqConnections as $openId => $connection) {
-                // 检查连接是否仍然有效
-                if (property_exists($connection, 'closed') && $connection->closed) {
-                    // 连接已关闭，从map中移除
-                    unset($that->cqConnections[$openId]);
-                    continue;
-                }
-
                 $that->sendLatestCoinRandomList($connection, $that);
             }
             
@@ -280,6 +285,16 @@ class Worker extends Server
 
     private function sendLatestCoinRandomList($connection, $that)
     {
+        // 检查连接是否已被标记为关闭
+        if (isset($connection->_closed_flag) && $connection->_closed_flag) {
+            return;
+        }
+
+        // 检查连接状态
+        if ($connection->getStatus() !== TcpConnection::STATUS_ESTABLISHED) {
+            return;
+        }
+
         // 获取 user_log 表最新10条记录
         $rows = Db::table('user_log')->order('id desc')->limit(10)->select()->toArray();
         if (empty($rows)) {
@@ -294,10 +309,15 @@ class Worker extends Server
         }
 
         // 主动推送最新消息给用户
-        $that->sendJson($connection, [
-            'type' => 'latest_coin_random_list',
-            'rows' => $result,
-        ]);
+        try {
+            $that->sendJson($connection, [
+                'type' => 'latest_coin_random_list',
+                'rows' => $result,
+            ]);
+        } catch (\Exception $e) {
+            // 发送失败，标记连接为已关闭
+            $connection->_closed_flag = true;
+        }
     }
 
     private function checkTaskGranted($openId){

@@ -123,14 +123,23 @@ class Goods extends BaseController
      */
     public function add_order(){
         $data = $this->request->param();
-        $user_info = Db::table('ul_order_user')->where('open_id',$data['open_id'])->find();
+        $user_info = Db::table('ul_order_user')->where('open_id',$data['open_id'])->findOrEmpty();
+        if(empty($user_info)){
+            return json(['code'=>0,'msg'=>'用户不存在']);
+        }
         if($user_info['phone'] == ''  || $user_info['phone']== null){
             return json(['code'=>0,'msg'=>'未绑定手机号']);
         }
         if($user_info['sfz'] == ''  || $user_info['sfz']== null){
             return json(['code'=>0,'msg'=>'未进行实名认证']);
         }
-        $goods_info = Db::table('ul_coin_goods')->where('id',$data['coin_goods_id'])->find();
+        $goods_info = Db::table('ul_coin_goods')->where('id',$data['coin_goods_id'])->findOrEmpty();
+        if(empty($goods_info)){
+            return json(['code'=>0,'msg'=>'商品不存在']);
+        }
+        if($user_info['coin_num'] < $goods_info['price']){
+            return json(['code'=>0,'msg'=>'金币不足']);
+        }
         $data['order_id'] = md5(time());//订单号
         $data['order_user_id'] = $user_info['id'];//下单用户id
         $data['order_user_name'] = $user_info['name'];//下单用户姓名
