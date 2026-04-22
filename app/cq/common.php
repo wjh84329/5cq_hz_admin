@@ -3,6 +3,7 @@
 use Carbon\Carbon;
 use think\facade\Cache;
 use think\facade\Db;
+use app\http\Worker;
 
 /**
  * Notes:生成UID
@@ -211,6 +212,7 @@ function getCoin($data)
             $data['code'] = 0;
             $data['title'] = '累计签到3天奖励';
             Db::table('user_log')->insert(['log' => '<p><span style="color:#ff0000;">会员【' . $userinfo['name'] . '】</span>成功领取<span style="color:#4AAC4E;">累计签到三天奖励</span></p>']);
+            Worker::broadcastLatestLog();
             break;
         case 3:    //签到7天奖励
             $firstDayOfMonth = Carbon::now()->startOfMonth()->toDateString();
@@ -225,6 +227,7 @@ function getCoin($data)
             $data['code'] = 0;
             $data['title'] = '累计签到7天奖励';
             Db::table('user_log')->insert(['log' => '<p><span style="color:#ff0000;">会员【' . $userinfo['name'] . '】</span>成功领取<span style="color:#4AAC4E;">累计签到七天奖励</span></p>']);
+            Worker::broadcastLatestLog();
             break;
         case 4:    //签到14天奖励
             $firstDayOfMonth = Carbon::now()->startOfMonth()->toDateString();
@@ -239,6 +242,7 @@ function getCoin($data)
             $data['code'] = 0;
             $data['title'] = '累计签到14天奖励';
             Db::table('user_log')->insert(['log' => '<p><span style="color:#ff0000;">会员【' . $userinfo['name'] . '】</span>成功领取<span style="color:#4AAC4E;">累计签到十四天奖励</span></p>']);
+            Worker::broadcastLatestLog();
             break;
         case 5:    //签到28天奖励
             $firstDayOfMonth = Carbon::now()->startOfMonth()->toDateString();
@@ -253,6 +257,7 @@ function getCoin($data)
             $data['code'] = 0;
             $data['title'] = '累计签到28天奖励';
             Db::table('user_log')->insert(['log' => '<p><span style="color:#ff0000;">会员【' . $userinfo['name'] . '】</span>成功领取<span style="color:#4AAC4E;">累计签到二十八天奖励</span></p>']);
+            Worker::broadcastLatestLog();
             break;
         case 6:    //绑定手机
             $info = Db::table('coin_info')->where('open_id', $data['open_id'])->where('fs', '绑定手机')->findOrEmpty();
@@ -264,6 +269,7 @@ function getCoin($data)
             $data['code'] = 0;
             $data['title'] = '绑定手机';
             Db::table('user_log')->insert(['log' => '<p><span style="color:#ff0000;">会员【' . $userinfo['name'] . '】</span>绑定手机成功</p>']);
+            Worker::broadcastLatestLog();
             break;
         case 7:    //实名认证
             $info = Db::table('coin_info')->where('open_id', $data['open_id'])->where('fs', '实名认证')->findOrEmpty();
@@ -275,6 +281,7 @@ function getCoin($data)
             $data['code'] = 0;
             $data['title'] = '实名认证';
             Db::table('user_log')->insert(['log' => '<p><span style="color:#ff0000;">会员【' . $userinfo['name'] . '】</span>实名认证成功</p>']);
+            Worker::broadcastLatestLog();
             break;
         case 8:    //注册立得金币
             $info = Db::table('coin_info')->where('open_id', $data['open_id'])->where('fs', '注册')->findOrEmpty();
@@ -286,6 +293,7 @@ function getCoin($data)
             $data['code'] = 0;
             $data['title'] = '注册';
             Db::table('user_log')->insert(['log' => '<p><span style="color:#ff0000;">会员【' . $userinfo['name'] . '】</span>注册成功</p>']);
+            Worker::broadcastLatestLog();
             break;
         case 9:    //发帖回帖评论得金币
             $data['coin_num'] = $operation_info['postCoin'];
@@ -293,6 +301,7 @@ function getCoin($data)
             $data['code'] = 0;
             $data['title'] = '发帖回帖评论';
             Db::table('user_log')->insert(['log' => '<p><span style="color:#ff0000;">会员【' . $userinfo['name'] . '】</span>发帖回帖成功获得<span style="color:#4AAC4E;">' . $data['coin_num'] . '金币</span></p>']);
+            Worker::broadcastLatestLog();
             break;
         case 10:    //浏览游戏得金币
             $info = Db::table('coin_info')->where('open_id', $data['open_id'])->where('fs', '浏览游戏')->whereTime('updata_time', 'today')->findOrEmpty();
@@ -313,6 +322,7 @@ function getCoin($data)
                 $data['code'] = 0;
                 $data['title'] = '白银宝箱';
                 Db::table('user_log')->insert(['log' => '<p><span style="color:#ff0000;">会员【' . $userinfo['name'] . '】</span>成功领取<span style="color:#4AAC4E;">白银宝箱</span></p>']);
+                Worker::broadcastLatestLog();
             } else {
                 $data['bylq'] = 1;
             }
@@ -326,6 +336,7 @@ function getCoin($data)
                 $data['code'] = 0;
                 $data['title'] = '黄金宝箱';
                 Db::table('user_log')->insert(['log' => '<p><span style="color:#ff0000;">会员【' . $userinfo['name'] . '】</span>成功领取<span style="color:#4AAC4E;">黄金宝箱</span></p>']);
+                Worker::broadcastLatestLog();
             } else {
                 $data['hjlq'] = 1;
             }
@@ -339,6 +350,7 @@ function getCoin($data)
                 $data['code'] = 0;
                 $data['title'] = '铂金宝箱';
                 Db::table('user_log')->insert(['log' => '<p><span style="color:#ff0000;">会员【' . $userinfo['name'] . '】</span>成功领取<span style="color:#4AAC4E;">铂金宝箱</span></p>']);
+                Worker::broadcastLatestLog();
             } else {
                 $data['bjlq'] = 1;
             }
@@ -352,6 +364,7 @@ function getCoin($data)
                 $data['code'] = 0;
                 $data['title'] = '钻石宝箱';
                 Db::table('user_log')->insert(['log' => '<p><span style="color:#ff0000;">会员【' . $userinfo['name'] . '】</span>成功领取<span style="color:#4AAC4E;">钻石宝箱</span></p>']);
+                Worker::broadcastLatestLog();
             } else {
                 $data['zslq'] = 1;
             }
@@ -442,6 +455,7 @@ function getCoin($data)
             $data['title'] = $concatenatedString;
             unset($data['state']);
             Db::table('user_log')->insert(['log' => '<p><span style="color:#ff0000;">会员【' . $userinfo['name'] . '】</span>抽中了<span style="color:#4AAC4E;">' . $data['title'] . '</span></p>']);
+            Worker::broadcastLatestLog();
             break;
         /*case 25:    //实物奖品1
             $coin = explode('金币',$luckyCoin['luckyPrizeItemTitle1']);
@@ -515,6 +529,7 @@ function getCoin($data)
             $data['code'] = 0;
             $data['title'] = '红包奖励';
             Db::table('user_log')->insert(['log' => '<p><span style="color:#ff0000;">会员【' . $userinfo['name'] . '】</span>成功领取<span style="color:#4AAC4E;">红包奖励</span></p>']);
+            Worker::broadcastLatestLog();
             break;
         case 34:    //每日盲盒
             $info = Db::table('coin_info')->where('open_id', $data['open_id'])->where('fs', '每日盲盒')->where('updata_time', 'today')->findOrEmpty();
@@ -527,6 +542,7 @@ function getCoin($data)
             $data['code'] = 0;
             $data['title'] = '每日盲盒';
             Db::table('user_log')->insert(['log' => '<p><span style="color:#ff0000;">会员【' . $userinfo['name'] . '】</span>成功领取<span style="color:#4AAC4E;">每日盲盒</span></p>']);
+            Worker::broadcastLatestLog();
             break;
         case 35:    //特色好服任务一  额外参数：yx_id
             $info = Db::table('coin_info')->where('open_id', $data['open_id'])->where('fs', '游戏在线时长60分钟')->where('updata_time', 'today')->findOrEmpty();
@@ -538,6 +554,7 @@ function getCoin($data)
             $data['code'] = 0;
             $data['title'] = '任务一';
             Db::table('user_log')->insert(['log' => '<p><span style="color:#ff0000;">会员【' . $userinfo['name'] . '】</span>成功完成特色好服<span style="color:#4AAC4E;">游戏在线时长60分钟任务</span></p>']);
+            Worker::broadcastLatestLog();
             break;
         case 36:    //特色好服任务二  额外参数：yx_id
             $info = Db::table('coin_info')->where('open_id', $data['open_id'])->where('fs', '游戏在线时长120分钟')->where('updata_time', 'today')->findOrEmpty();
@@ -549,6 +566,7 @@ function getCoin($data)
             $data['code'] = 0;
             $data['title'] = '任务二';
             Db::table('user_log')->insert(['log' => '<p><span style="color:#ff0000;">会员【' . $userinfo['name'] . '】</span>成功完成特色好服<span style="color:#4AAC4E;">游戏在线时长120分钟任务</span></p>']);
+            Worker::broadcastLatestLog();
             break;
         case 37:    //特色好服任务三  额外参数：yx_id
             $info = Db::table('coin_info')->where('open_id', $data['open_id'])->where('fs', '游戏评分')->where('updata_time', 'today')->findOrEmpty();
@@ -560,6 +578,7 @@ function getCoin($data)
             $data['code'] = 0;
             $data['title'] = '任务三';
             Db::table('user_log')->insert(['log' => '<p><span style="color:#ff0000;">会员【' . $userinfo['name'] . '】</span>成功完成特色好服<span style="color:#4AAC4E;">游戏评分任务</span></p>']);
+            Worker::broadcastLatestLog();
             break;
         case 38:    //金币商城兑换物品  额外参数：goods_id
             $info = Db::table('ul_coin_goods')->where('id', $data['goods_id'])->findOrEmpty();
@@ -575,6 +594,7 @@ function getCoin($data)
                 $data['mygoods_lack'] = 1;
             }
             Db::table('user_log')->insert(['log' => '<p><span style="color:#ff0000;">会员【' . $userinfo['name'] . '】</span>成功兑换了<span style="color:#4AAC4E;">' . $info['title'] . '</span></p>']);
+            Worker::broadcastLatestLog();
             break;
         case 39:    //活动赛事竞猜红方投注  额外参数：coin_num  sbk_id
             $data['fs'] = '比赛竞猜';
@@ -582,6 +602,7 @@ function getCoin($data)
             $data['tz_type'] = 1;
             $data['title'] = '红方投注';
             Db::table('user_log')->insert(['log' => '<p><span style="color:#ff0000;">会员【' . $userinfo['name'] . '】</span>成功进行了<span style="color:#4AAC4E;">沙巴克红方投注</span></p>']);
+            Worker::broadcastLatestLog();
             break;
         case 40:    //活动赛事竞猜蓝方投注  额外参数：coin_num  sbk_id
             $data['fs'] = '比赛竞猜';
@@ -589,6 +610,7 @@ function getCoin($data)
             $data['tz_type'] = 2;
             $data['title'] = '蓝方投注';
             Db::table('user_log')->insert(['log' => '<p><span style="color:#ff0000;">会员【' . $userinfo['name'] . '】</span>成功进行了<span style="color:#4AAC4E;">沙巴克蓝方投注</span></p>']);
+            Worker::broadcastLatestLog();
             break;
         case 41:    //活动赛事竞猜结算  额外参数：  sbk_id
             $sbkinfo = Db::table("ul_sbk")->where('id', $data['sbk_id'])->findOrEmpty();
@@ -599,6 +621,7 @@ function getCoin($data)
             $data['tz_type'] = 2;
             $data['title'] = '竞猜奖励';
             Db::table('user_log')->insert(['log' => '<p><span style="color:#ff0000;">会员【' . $userinfo['name'] . '】</span>成功获得了<span style="color:#4AAC4E;">沙巴克竞猜奖励</span></p>']);
+            Worker::broadcastLatestLog();
             break;
         case 42:    //白银宝箱
             $info = Db::table('coin_info')->where('open_id', $data['open_id'])->where('fs', '白银宝箱')->whereTime('updata_time', 'today')->findOrEmpty();
@@ -609,6 +632,7 @@ function getCoin($data)
                 $data['code'] = 0;
                 $data['title'] = '网页白银宝箱';
                 Db::table('user_log')->insert(['log' => '<p><span style="color:#ff0000;">会员【' . $userinfo['name'] . '】</span>成功领取了<span style="color:#4AAC4E;">白银宝箱</span></p>']);
+                Worker::broadcastLatestLog();
             } else {
                 $data['bylq'] = 1;
             }
@@ -622,6 +646,7 @@ function getCoin($data)
                 $data['code'] = 0;
                 $data['title'] = '网页黄金宝箱';
                 Db::table('user_log')->insert(['log' => '<p><span style="color:#ff0000;">会员【' . $userinfo['name'] . '】</span>成功领取了<span style="color:#4AAC4E;">黄金宝箱</span></p>']);
+                Worker::broadcastLatestLog();
             } else {
                 $data['hjlq'] = 1;
             }
@@ -635,6 +660,7 @@ function getCoin($data)
                 $data['code'] = 0;
                 $data['title'] = '网页铂金宝箱';
                 Db::table('user_log')->insert(['log' => '<p><span style="color:#ff0000;">会员【' . $userinfo['name'] . '】</span>成功领取了<span style="color:#4AAC4E;">铂金宝箱</span></p>']);
+                Worker::broadcastLatestLog();
             } else {
                 $data['bjlq'] = 1;
             }
@@ -648,6 +674,7 @@ function getCoin($data)
                 $data['code'] = 0;
                 $data['title'] = '网页钻石宝箱';
                 Db::table('user_log')->insert(['log' => '<p><span style="color:#ff0000;">会员【' . $userinfo['name'] . '】</span>成功领取了<span style="color:#4AAC4E;">钻石宝箱</span></p>']);
+                Worker::broadcastLatestLog();
             } else {
                 $data['zslq'] = 1;
             }
@@ -660,6 +687,7 @@ function getCoin($data)
                 $data['code'] = 0;
                 $data['title'] = '网页分享得金币';
                 Db::table('user_log')->insert(['log' => '<p><span style="color:#ff0000;">会员【' . $userinfo['name'] . '】</span>成功通过<span style="color:#4AAC4E;">网页分享</span>获得了金币<span style="color:#4AAC4E;"></span></p>']);
+                Worker::broadcastLatestLog();
             } else {
                 $data['coin_num'] = 0;
                 $data['fs'] = '网页分享得金币';

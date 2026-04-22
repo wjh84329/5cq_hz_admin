@@ -7,6 +7,7 @@ use app\BaseController;
 use think\db\Where;
 use think\facade\Db;
 use think\facade\Cache;
+use app\http\Worker;
 
 class Kill extends BaseController
 {
@@ -954,6 +955,8 @@ class Kill extends BaseController
 
     
             Db::table('user_log')->insert(['log'=>'<p><span style="color:#ff0000;">会员【'.$user['name'].'】</span>在金币打怪中击败了<span style="color:#FFA500;">'.$monster['title'].'</span></p>']);
+            Worker::broadcastLatestLog();
+            Worker::sendUserInfoUpdate($user['open_id']);
             return json([
                 'code' => 200,
                 'msg' => '抽奖成功',
@@ -1330,6 +1333,7 @@ class Kill extends BaseController
                     'exp' => $exp,
                 ];
                 Db::table('user_log')->insert(['log'=>'<p><span style="color:#ff0000;">会员【'.$user['name'].'】</span>在线回收了<span style="color:#4AAC4E;">'.$cfg['title'].'X'.$num.'</span></p>']);
+                Worker::broadcastLatestLog();
             }
 
             // 增加金币
@@ -1355,7 +1359,6 @@ class Kill extends BaseController
                     throw new \Exception('增加金币失败');
                 }
             }
-
             // 增加游戏时长（经验值）
             if ($totalExp > 0) {
                 // 新增或更新 yxsc 记录（无上限）
@@ -1405,7 +1408,7 @@ class Kill extends BaseController
             $latestUser = Db::table('ul_order_user')
                 ->where('open_id', $openId)
                 ->find();
-
+            Worker::sendUserInfoUpdate($user['open_id']);
             return json([
                 'code' => 200,
                 'msg' => '回收成功',

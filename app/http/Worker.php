@@ -25,4 +25,26 @@ class Worker
     {
         return Events::sendMessageByUid($uid, $message);
     }
+
+    /**
+     * 广播最新日志给所有在线用户
+     * 
+     * 在日志入库时调用此方法
+     */
+    public static function broadcastLatestLog()
+    {
+        Events::broadcastLatestLog();
+    }
+
+    /**
+     * 推送用户信息更新给指定用户
+     * 
+     * 在更新 ul_order_user 表后调用此方法
+     * 
+     * @param string $open_id
+     */
+    public static function sendUserInfoUpdate($open_id)
+    {
+        Events::sendUserInfoUpdate($open_id);
+    }
 }

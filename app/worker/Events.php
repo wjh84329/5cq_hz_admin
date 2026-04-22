@@ -579,4 +579,62 @@ class Events
         Gateway::sendToUid($uid, $message);
         return true;
     }
+
+    /**
+     * 广播最新日志给所有在线用户
+     */
+    public static function broadcastLatestLog()
+    {
+        // 获取 user_log 表最新10条记录
+        $rows = Db::table('user_log')->order('id desc')->limit(10)->select()->toArray();
+        if (empty($rows)) {
+            return;
+        }
+
+        // 反转数组使其按时间升序排列（最新的在最后）
+        $rows = array_reverse($rows);
+        $result = [];
+        foreach ($rows as $k => $v) {
+            $result[$k] = $v['log'];
+        }
+
+        $message = json_encode([
+            'type' => 'latest_coin_random_list',
+            'rows' => $result,
+        ], JSON_UNESCAPED_UNICODE);
+
+        // 广播给所有在线用户
+        Gateway::sendToAll($message);
+    }
+
+    /**
+     * 推送用户信息更新给指定用户
+     * 
+     * @param string $open_id
+     */
+    public static function sendUserInfoUpdate($open_id)
+    {
+        $open_id = trim((string)$open_id);
+        if ($open_id === '') {
+            return;
+        }
+
+        $user = Db::table('ul_order_user')
+            ->field('id,open_id,nickname,avatar,lv,coin_num,money,sign,is_online,state')
+            ->where('open_id', $open_id)
+            ->find();
+
+        if (!$user) {
+            return;
+        }
+
+        $message = json_encode([
+            'type' => 'user_info_updated',
+            'code' => 200,
+            'msg'  => '用户信息已更新',
+            'data' => $user,
+        ], JSON_UNESCAPED_UNICODE);
+
+        Gateway::sendToUid($open_id, $message);
+    }
 }
