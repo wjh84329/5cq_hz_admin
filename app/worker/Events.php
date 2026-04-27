@@ -5,51 +5,48 @@ use GatewayWorker\Lib\Gateway;
 use think\facade\Cache;
 use think\facade\Db;
 use Workerman\Lib\Timer;
-use Workerman\Connection\TcpConnection;
 
 class Events
 {
     /**
-     * 存储5cq连接的map，key为open_id
+     * 存储 5cq 连接映射，key 为 open_id
      *
      * @var array
      */
     public static $cqConnections = [];
 
     /**
-     * 存储客户端定时器，key为client_id
+     * 存储连接的登录态，key 为 client_id
      *
      * @var array
      */
-    public static $clientIdTimers = [];
+    public static $clientSessions = [];
 
     /**
-     * 当worker进程启动时触发
+     * 全局消息推送定时器是否已启动
+     *
+     * @var bool
      */
+    protected static $cqMessageTimerStarted = false;
+
     public static function onWorkerStart($businessWorker)
     {
-        // 初始化5cq连接map
         self::$cqConnections = [];
+        self::$clientSessions = [];
+        self::$cqMessageTimerStarted = false;
 
         if (!defined('HEARTBEAT_TIME')) {
             define('HEARTBEAT_TIME', 55);
         }
 
-        // 定期向5cq连接发送信息
         self::startCqMessageTimer();
     }
 
-    /**
-     * 当客户端连接时触发
-     */
     public static function onConnect($client_id)
     {
-        // GatewayWorker 自动管理连接，无需手动处理
+        // 连接由 GatewayWorker 管理，这里不额外处理。
     }
 
-    /**
-     * 当客户端发送消息时触发
-     */
     public static function onMessage($client_id, $message)
     {
         $payload = json_decode($message, true);
@@ -74,6 +71,11 @@ class Events
                 ]);
                 return;
 
+            case 'pong':
+            case 'heartbeat':
+                self::handleHeartbeat($client_id);
+                return;
+
             case 'login':
                 self::handleLogin($client_id, $payload);
                 return;
@@ -91,58 +93,7 @@ class Events
                 return;
 
             case '5cq_login':
-                $openId = isset($payload['open_id']) ? $payload['open_id'] : '';
-                $token  = isset($payload['token']) ? $payload['token'] : '';
-                if ($openId === '' || $token === '') {
-                    self::sendJson($client_id, [
-                        'code' => 0,
-                        'type' => 'logout',
-                        'msg'  => 'open_id或token不能为空',
-                    ]);
-                    return;
-                }
-                if (!self::checkToken($openId, $token)) {
-                    self::sendJson($client_id, ['code'=>200, 'type'=>'logout']);
-                    return;
-                }
-                $payload['open_id'] = $openId;
-                $payload['token'] = $token;
-                self::handle5cqLogin($client_id, $payload, 0);
-                self::sendLatestCoinRandomList($client_id);
-                // 将连接添加到5cq连接map中
-                self::$cqConnections[$openId] = $client_id;
-                // 每隔5秒发送一次登录信息
-                if (!isset(self::$clientIdTimers[$client_id])) {
-                    self::$clientIdTimers[$client_id] = Timer::add(5, function () use ($client_id, $payload) {
-                        $openId = isset($payload['open_id']) ? $payload['open_id'] : '';
-                        $token  = isset($payload['token']) ? $payload['token'] : '';
-                        $checkResult = self::checkToken($openId, $token);
-
-                        // 检查连接是否仍然有效
-                        if (!Gateway::isOnline($client_id)) {
-                            // 连接已关闭，清除定时器
-                            if (isset(self::$clientIdTimers[$client_id])) {
-                                Timer::del(self::$clientIdTimers[$client_id]);
-                                unset(self::$clientIdTimers[$client_id]);
-                            }
-                            return;
-                        }
-
-                        if (!$checkResult) {
-                            self::sendJson($client_id, ['code'=>200, 'type'=>'logout']);
-                            // 先清除定时器，再关闭连接
-                            if (isset(self::$clientIdTimers[$client_id])) {
-                                Timer::del(self::$clientIdTimers[$client_id]);
-                                unset(self::$clientIdTimers[$client_id]);
-                            }
-                            Gateway::closeClient($client_id);
-                            return;
-                        }
-
-                        // 安全执行登录信息发送
-                        self::handle5cqLogin($client_id, $payload, 5);
-                    });
-                }
+                self::handle5cqClientLogin($client_id, $payload);
                 return;
 
             default:
@@ -156,12 +107,8 @@ class Events
         }
     }
 
-    /**
-     * 当客户端断开连接时触发
-     */
     public static function onClose($client_id)
     {
-        // 从5cq连接map中移除
         foreach (self::$cqConnections as $openId => $cid) {
             if ($cid === $client_id) {
                 unset(self::$cqConnections[$openId]);
@@ -169,62 +116,81 @@ class Events
             }
         }
 
-        // 清除登录定时器
-        if (isset(self::$clientIdTimers[$client_id])) {
-            Timer::del(self::$clientIdTimers[$client_id]);
-            unset(self::$clientIdTimers[$client_id]);
-        }
+        unset(self::$clientSessions[$client_id]);
     }
 
-    /**
-     * 启动5cq消息定时器
-     */
     private static function startCqMessageTimer()
     {
-        // 生成1-5秒的随机间隔
-        $interval = rand(1, 5);
+        if (self::$cqMessageTimerStarted) {
+            return;
+        }
 
-        Timer::add($interval, function () {
-            // 向所有5cq连接发送信息
+        self::$cqMessageTimerStarted = true;
+
+        Timer::add(rand(1, 5), function () {
             foreach (self::$cqConnections as $openId => $client_id) {
                 if (Gateway::isOnline($client_id)) {
                     self::sendLatestCoinRandomList($client_id);
+                    continue;
                 }
-            }
 
-            // 重新设置定时器，使用新的随机间隔
-            self::startCqMessageTimer();
-        }, [], false);
+                unset(self::$cqConnections[$openId], self::$clientSessions[$client_id]);
+            }
+        });
+    }
+
+    private static function handle5cqClientLogin($client_id, array $payload)
+    {
+        $openId = trim((string)($payload['open_id'] ?? ''));
+        $token  = trim((string)($payload['token'] ?? ''));
+
+        if ($openId === '' || $token === '') {
+            self::sendJson($client_id, [
+                'code' => 0,
+                'type' => 'logout',
+                'msg'  => 'open_id或token不能为空',
+            ]);
+            return;
+        }
+
+        if (!self::checkToken($openId, $token)) {
+            self::sendJson($client_id, ['code' => 200, 'type' => 'logout']);
+            return;
+        }
+
+        $payload['open_id'] = $openId;
+        $payload['token'] = $token;
+
+        self::registerClientSession($client_id, $openId, $token, true);
+        self::$cqConnections[$openId] = $client_id;
+
+        self::handle5cqLogin($client_id, $payload, 0);
+        self::sendLatestCoinRandomList($client_id);
     }
 
     private static function sendLatestCoinRandomList($client_id)
     {
-        // 检查连接状态
         if (!Gateway::isOnline($client_id)) {
             return;
         }
 
-        // 获取 user_log 表最新10条记录
         $rows = Db::table('user_log')->order('id desc')->limit(10)->select()->toArray();
         if (empty($rows)) {
             return;
         }
 
-        // 反转数组使其按时间升序排列（最新的在最后）
         $rows = array_reverse($rows);
         $result = [];
         foreach ($rows as $k => $v) {
             $result[$k] = $v['log'];
         }
 
-        // 主动推送最新消息给用户
         try {
             self::sendJson($client_id, [
                 'type' => 'latest_coin_random_list',
                 'rows' => $result,
             ]);
-        } catch (\Exception $e) {
-            // 发送失败，关闭连接
+        } catch (\Throwable $e) {
             Gateway::closeClient($client_id);
         }
     }
@@ -233,16 +199,24 @@ class Events
     {
         $undoneNum = 6;
 
-        $typeArr = ['白银宝箱','黄金宝箱','铂金宝箱','钻石宝箱','浏览游戏'];
-        foreach ($typeArr as $k => $v) {
-            $fs = $v;
-            $info = Db::table('coin_info')->where('open_id',$openId)->where('fs', $fs)->whereTime('updata_time','today')->findOrEmpty();
-            if(!empty($info)){
+        $typeArr = ['白银宝箱', '黄金宝箱', '铂金宝箱', '钻石宝箱', '浏览游戏'];
+        foreach ($typeArr as $fs) {
+            $info = Db::table('coin_info')
+                ->where('open_id', $openId)
+                ->where('fs', $fs)
+                ->whereTime('updata_time', 'today')
+                ->findOrEmpty();
+            if (!empty($info)) {
                 $undoneNum--;
             }
         }
-        $list = Db::table('coin_info')->where('open_id',$openId)->where('fs','网页分享得金币')->whereTime('updata_time','today')->select();
-        if(count($list) >= 10){
+
+        $list = Db::table('coin_info')
+            ->where('open_id', $openId)
+            ->where('fs', '网页分享得金币')
+            ->whereTime('updata_time', 'today')
+            ->select();
+        if (count($list) >= 10) {
             $undoneNum--;
         }
 
@@ -259,55 +233,143 @@ class Events
         return false;
     }
 
+    private static function registerClientSession($client_id, $openId, $token, $trackTime = false)
+    {
+        Gateway::bindUid($client_id, $openId);
+
+        self::$clientSessions[$client_id] = [
+            'open_id'        => (string)$openId,
+            'token'          => (string)$token,
+            'track_time'     => (bool)$trackTime,
+            'last_heartbeat' => time(),
+        ];
+    }
+
+    private static function handleHeartbeat($client_id)
+    {
+        if (!isset(self::$clientSessions[$client_id])) {
+            return;
+        }
+
+        $session = self::$clientSessions[$client_id];
+        $openId = (string)($session['open_id'] ?? '');
+        $token = (string)($session['token'] ?? '');
+        if ($openId === '' || $token === '') {
+            return;
+        }
+
+        if (!self::checkToken($openId, $token)) {
+            self::sendJson($client_id, ['code' => 200, 'type' => 'logout']);
+            Gateway::closeClient($client_id);
+            return;
+        }
+
+        $now = time();
+        $lastHeartbeat = (int)($session['last_heartbeat'] ?? $now);
+        self::$clientSessions[$client_id]['last_heartbeat'] = $now;
+
+        if (!empty($session['track_time'])) {
+            $seconds = max(0, min($now - $lastHeartbeat, HEARTBEAT_TIME));
+            if ($seconds > 0) {
+                self::updateUserTimeCount($openId, $seconds);
+            }
+        }
+    }
+
+    private static function normalizeTimeCount(array $info, $count)
+    {
+        $timeCount = isset($info['time_count']) ? (int)$info['time_count'] : 0;
+        $timeCountDate = isset($info['time_count_date']) ? (int)$info['time_count_date'] : (int)date('j');
+
+        if ((int)date('j') !== $timeCountDate) {
+            $timeCount = 0;
+            $timeCountDate = (int)date('j');
+        }
+
+        if ($timeCount < 240 * 60) {
+            $timeCount += (int)$count;
+            if ($timeCount > 240 * 60) {
+                $timeCount = 240 * 60;
+            }
+        }
+
+        return [$timeCount, $timeCountDate];
+    }
+
+    private static function updateUserTimeCount($openId, $count)
+    {
+        $user = Db::table('ul_order_user')
+            ->field('time_count,time_count_date')
+            ->where('open_id', $openId)
+            ->find();
+
+        if (!$user) {
+            return;
+        }
+
+        [$timeCount, $timeCountDate] = self::normalizeTimeCount($user, $count);
+
+        Db::table('ul_order_user')
+            ->where('open_id', $openId)
+            ->update([
+                'time_count'      => $timeCount,
+                'time_count_date' => $timeCountDate,
+            ]);
+    }
+
     public static function handle5cqLogin($client_id, array $payload, $count)
     {
         $openId = $payload['open_id'];
-        $info = Db::table('ul_order_user')->where('open_id',$openId)->find();
-        if($info['state'] == 1){
-            return self::sendJson($client_id, ['code'=>0, 'type'=>$payload['type'], 'msg'=>'账户已被封禁']);
+        $info = Db::table('ul_order_user')->where('open_id', $openId)->find();
+        if (!$info) {
+            return self::sendJson($client_id, ['code' => 0, 'type' => $payload['type'], 'msg' => '用户不存在']);
+        }
+
+        if ((int)$info['state'] === 1) {
+            return self::sendJson($client_id, ['code' => 0, 'type' => $payload['type'], 'msg' => '账户已被封禁']);
         }
 
         $sum1 = Db::table('yxsc')->where('open_id', $openId)->sum('yxsc');
         $sum2 = Db::table('yxsc')->where('open_id', $openId)->sum('hf_sc');
         $sum  = $sum1 + $sum2;
 
-        $todaynum1 = Db::table('yxsc')->where('source','add_game_time')->where('open_id', $openId)->whereTime('update_time','today')->sum('yxsc');
-        $todaynum2 = Db::table('yxsc')->where('source','add_game_time')->where('open_id', $openId)->whereTime('update_time','today')->sum('hf_sc');
-        $todayTotal  = $todaynum1 + $todaynum2;
+        $todaynum1 = Db::table('yxsc')
+            ->where('source', 'add_game_time')
+            ->where('open_id', $openId)
+            ->whereTime('update_time', 'today')
+            ->sum('yxsc');
+        $todaynum2 = Db::table('yxsc')
+            ->where('source', 'add_game_time')
+            ->where('open_id', $openId)
+            ->whereTime('update_time', 'today')
+            ->sum('hf_sc');
+        $todayTotal = $todaynum1 + $todaynum2;
+
         $info['yxsc'] = (string)$todayTotal;
         $info['hf_sc'] = (string)$sum2;
         $info['total_yxsc'] = (string)$sum;
 
-        $time_count = $info['time_count'];
-        $time_count_date = $info['time_count_date'];
-        if ($time_count == null) {
-            $time_count = 0;
-        }
-        if ($time_count_date == null) {
-            $time_count_date = (int)date('j');
-        }
-        if ((int)date('j') != $time_count_date) {
-            $time_count = 0;
-            $time_count_date = (int)date('j');
-        }
-
-        if ($time_count < 240 * 60) {
-            $time_count += $count;
-        }
+        [$timeCount, $timeCountDate] = self::normalizeTimeCount($info, $count);
 
         $levelInfoList = Db::table('ul_user_level')->select();
-
         $info['undone_num'] = self::checkTaskGranted($openId);
 
-        Db::table('ul_order_user')->where('open_id',$payload['open_id'])
-            ->update(['time_count'=>$time_count, 'time_count_date'=>$time_count_date]);
-        return self::sendJson($client_id, ['code'=>200, 'type'=>$payload['type'], 'msg'=>'用户信息',
-            'levelInfoList'=>$levelInfoList, 'data'=>$info]);
+        Db::table('ul_order_user')
+            ->where('open_id', $openId)
+            ->update([
+                'time_count'      => $timeCount,
+                'time_count_date' => $timeCountDate,
+            ]);
+
+        return self::sendJson($client_id, [
+            'code'          => 200,
+            'type'          => $payload['type'],
+            'msg'           => '用户信息',
+            'levelInfoList' => $levelInfoList,
+            'data'          => $info,
+        ]);
     }
 
-    /**
-     * 处理登录
-     */
     protected static function handleLogin($client_id, array $payload)
     {
         $openId = trim((string)($payload['open_id'] ?? ''));
@@ -355,11 +417,8 @@ class Events
             return;
         }
 
-        // 绑定 uid
-        Gateway::bindUid($client_id, $openId);
-
-        // 延长 token 有效期
         Cache::store('redis')->set('user_' . $openId, $token, 3600);
+        self::registerClientSession($client_id, $openId, $token);
 
         self::sendJson($client_id, [
             'type' => 'login',
@@ -375,9 +434,6 @@ class Events
         ]);
     }
 
-    /**
-     * 获取当前连接对应用户的信息
-     */
     protected static function handleGetUserInfo($client_id)
     {
         $uid = Gateway::getUidByClientId($client_id);
@@ -413,7 +469,6 @@ class Events
             return;
         }
 
-        // 获取当前登录用户的token并续费
         $token = Cache::store('redis')->get('user_' . $user['open_id']);
         if ($token) {
             Cache::store('redis')->set('user_' . $user['open_id'], $token, 3600);
@@ -439,9 +494,6 @@ class Events
         ]);
     }
 
-    /**
-     * 获取当前登录用户总游戏时长
-     */
     protected static function handleGetUserAllYxsc($client_id)
     {
         $uid = Gateway::getUidByClientId($client_id);
@@ -482,26 +534,31 @@ class Events
         $sum1 = Db::table('yxsc')->where('open_id', $openId)->sum('yxsc');
         $sum2 = Db::table('yxsc')->where('open_id', $openId)->sum('hf_sc');
         $sum  = $sum1 + $sum2;
-        $todaynum1 = Db::table('yxsc')->where('source','add_game_time')->where('open_id', $openId)->whereTime('update_time','today')->sum('yxsc');
-        $todaynum2 = Db::table('yxsc')->where('source','add_game_time')->where('open_id', $openId)->whereTime('update_time','today')->sum('hf_sc');
-        $todayTotal  = $todaynum1 + $todaynum2;
+        $todaynum1 = Db::table('yxsc')
+            ->where('source', 'add_game_time')
+            ->where('open_id', $openId)
+            ->whereTime('update_time', 'today')
+            ->sum('yxsc');
+        $todaynum2 = Db::table('yxsc')
+            ->where('source', 'add_game_time')
+            ->where('open_id', $openId)
+            ->whereTime('update_time', 'today')
+            ->sum('hf_sc');
+        $todayTotal = $todaynum1 + $todaynum2;
 
         self::sendJson($client_id, [
             'type' => 'get_user_all_yxsc',
             'code' => 200,
             'msg'  => '成功',
             'data' => [
-                'open_id'   => $openId,
-                'yxsc'      => (string)$todayTotal,
-                'hf_sc'     => (string)$sum2,
-                'total_yxsc'=> (string)$sum,
+                'open_id'    => $openId,
+                'yxsc'       => (string)$todayTotal,
+                'hf_sc'      => (string)$sum2,
+                'total_yxsc' => (string)$sum,
             ],
         ]);
     }
 
-    /**
-     * 获取运营参数配置
-     */
     protected static function handleBusinessOperation($client_id)
     {
         $list = Db::table('operation')->find(1);
@@ -558,17 +615,11 @@ class Events
         ]);
     }
 
-    /**
-     * 统一发送 JSON
-     */
     protected static function sendJson($client_id, array $data)
     {
         Gateway::sendToClient($client_id, json_encode($data, JSON_UNESCAPED_UNICODE));
     }
 
-    /**
-     * 针对 uid 推送数据
-     */
     public static function sendMessageByUid($uid, $message)
     {
         $uid = trim((string)$uid);
@@ -580,18 +631,13 @@ class Events
         return true;
     }
 
-    /**
-     * 广播最新日志给所有在线用户
-     */
     public static function broadcastLatestLog()
     {
-        // 获取 user_log 表最新10条记录
         $rows = Db::table('user_log')->order('id desc')->limit(10)->select()->toArray();
         if (empty($rows)) {
             return;
         }
 
-        // 反转数组使其按时间升序排列（最新的在最后）
         $rows = array_reverse($rows);
         $result = [];
         foreach ($rows as $k => $v) {
@@ -603,15 +649,9 @@ class Events
             'rows' => $result,
         ], JSON_UNESCAPED_UNICODE);
 
-        // 广播给所有在线用户
         Gateway::sendToAll($message);
     }
 
-    /**
-     * 推送用户信息更新给指定用户
-     * 
-     * @param string $open_id
-     */
     public static function sendUserInfoUpdate($open_id)
     {
         $open_id = trim((string)$open_id);

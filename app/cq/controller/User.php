@@ -772,7 +772,7 @@ class User extends BaseController
         }
         if (array_key_exists('mystery', $data)) {
             $info = Db::table('coin_info')->where('open_id',$data['open_id'])->where('fs',$data['fs'])->where('updata_time','today')->findOrEmpty();
-            return json(['code'=>200,'msg'=>$data['fs'].'今日已领取','mystery'=>1,'coinInfo'=>$info]);
+            return json(['code'=>200,'msg'=>$data['fs'].'奖励已领过','mystery'=>1,'coinInfo'=>$info]);
         }
         if(array_key_exists('bylq', $data)){
             $info = Db::table('coin_info')->where('open_id',$data['open_id'])->where('fs','白银宝箱')->whereTime('updata_time','today')->findOrEmpty();
@@ -1934,6 +1934,12 @@ class User extends BaseController
      */
     public function update_user_info(){
         $data = $this->request->param();
+        if(isset($data['phone'])){
+            $data['phone'] = trim((string)$data['phone']);
+        }
+        if(isset($data['code'])){
+            $data['code'] = trim((string)$data['code']);
+        }
         if(isset($data['sfz']) && !empty($data['sfz'])){
             $sfzcount = Db::table('ul_order_user')->where('sfz',$data['sfz'])->count();
             if($sfzcount != 0){
@@ -1955,10 +1961,10 @@ class User extends BaseController
             //从cache中查找手机号和验证码是否匹配
             $cacheCode = Cache::get('phone_code_'.$data['phone']);
             if($cacheCode !== false){
-                if($cacheCode != $data['code']){
+                if((string)$cacheCode !== (string)$data['code']){
                     return json(['code'=>0,'msg'=>'验证码错误']);
                 }else{
-                    Cache::rm('phone_code_'.$data['phone']);
+                    Cache::delete('phone_code_'.$data['phone']);
                 }
             }
             $phonecount = Db::table('ul_order_user')->where('phone',$data['phone'])->count();
@@ -1966,6 +1972,7 @@ class User extends BaseController
                 return json(['code'=>0,'msg'=>'手机号已经注册']);
             }
         }
+        unset($data['code']);
         $data['is_sh'] = 0;
         $save = Db::table('ul_order_user')->where('open_id',$data['open_id'])->update($data);
         if($save){
@@ -2147,7 +2154,7 @@ class User extends BaseController
      * )
      */
     public function send_code($phone){
-        $phone = $this->request->param('phone');
+        $phone = trim((string)$this->request->param('phone'));
         $select = Db::table('ul_order_user')->where('phone',$phone)->count();
         if($select !=0){
             return json(['code'=>1,'msg'=>'同一个手机号只能绑定一个账号']);
@@ -2195,7 +2202,7 @@ class User extends BaseController
      */
     public function send_code_dxb(){
         $data_list = Db::table('api_config')->find(1);
-        $phone = $this->request->param('phone');
+        $phone = trim((string)$this->request->param('phone'));
         $select = Db::table('ul_order_user')->where('phone',$phone)->count();
         if($select > 0){
             return json(['code'=>1,'msg'=>'同一个手机号只能绑定一个账号']);
@@ -2220,14 +2227,14 @@ class User extends BaseController
             $sendurl = $smsapi."sms?u=".$user."&p=".$pass."&m=".$phone."&c=".urlencode($content);
             $result =file_get_contents($sendurl) ;
             //将手机号和验证码放入cache中，设置过期时间为5分钟
-            if($result){
+            if($result === '0'){
                 cache('phone_code_'.$phone,$code,300);
             }
 //        echo $statusStr[$result];
             if($result=='0'){
                 return json(['code'=>0,'data'=>['yzm'=>$code,'phone'=>$phone]]);
             }else{
-                return json(['code'=>$result,'msg'=>$result[$statusStr]]);
+                return json(['code'=>$result,'msg'=>$statusStr[$result] ?? '短信发送失败']);
             }
         }
     }
@@ -3792,5 +3799,60 @@ class User extends BaseController
         Db::table('user_log')->insert(['log'=>'<p><span style="color:#ff0000;">会员【'.$name.'】</span>访问了游戏<span style="color:#4AAC4E;">'.$gameName.'</span></p>']);
         Worker::broadcastLatestLog();
         return json(['code' => 200, 'msg' => '成功']);
+    }
+
+    //根据传递的discount_amount减少用户waelfare字段的值
+    public function updateWelfare(){
+        $data = $this->request->param();
+        $open_id = $data['open_id'];
+        $discount_amount = $data['discount_amount'];
+        $userInfo = Db::table('ul_order_user')->where('open_id',$open_id)->findOrEmpty();
+        if(empty($userInfo)){
+            return json(['code' => 0, 'msg' => '用户不存在']);
+        }
+        if(floatval($userInfo['waelfare'])<floatval($discount_amount)){
+            return json(['code' => 0, 'msg' => '福利值不足']);
+        }
+        $update = Db::table('ul_order_user')->where('open_id',$open_id)->dec('waelfare',$discount_amount)->update();
+        if($update){
+            return json(['code' => 200, 'msg' => '成功']);
+        }else{
+            return json(['code' => 0, 'msg' => '失败']);
+        }
+    }
+
+    //金币兑换福利金
+    public function coinToWelfare(){
+        $data = $this->request->param();
+        $open_id = $data['open_id'];
+        $coin_num = $data['coin_num'];
+        $userInfo = Db::table('ul_order_user')->where('open_id',$open_id)->findOrEmpty();
+        if(empty($userInfo)){
+            return json(['code' => 0, 'msg' => '用户不存在']);
+        }
+        if(floatval($userInfo['coin_num'])<floatval($coin_num)){
+            return json(['code' => 0, 'msg' => '金币不足']);
+        }
+        //假设兑换比例为100金币=1福利金
+        if(floatval($coin_num)%100 != 0){
+            return json(['code' => 0, 'msg' => '兑换的金币数量必须是100的倍数']);
+        }
+        $welfare_num = floatval($coin_num)/100;
+        Db::startTrans();
+        try {
+            $updateCoin = Db::table('ul_order_user')->where('open_id',$open_id)->dec('coin_num',$coin_num)->update();
+            if(!$updateCoin){
+                throw new \Exception('金币扣除失败');
+            }
+            $updateWelfare = Db::table('ul_order_user')->where('open_id',$open_id)->inc('waelfare',$welfare_num)->update();
+            if(!$updateWelfare){
+                throw new \Exception('福利金增加失败');
+            }
+            Db::commit();
+            return json(['code' => 200, 'msg' => '成功']);
+        } catch (\Exception $e) {
+            Db::rollback();
+            return json(['code' => 0, 'msg' => $e->getMessage()]);
+        }
     }
 }

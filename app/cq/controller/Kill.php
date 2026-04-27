@@ -1679,6 +1679,133 @@ class Kill extends BaseController
         return 'RB' . date('YmdHis') . mt_rand(1000, 9999) . substr(md5($openId . microtime(true)), 0, 6);
     }
 
+    private function buildManualRechargePayload(
+        string $merchantId,
+        string $playerAccount,
+        string $areaName,
+        float $payAmount,
+        string $partitionId,
+        string $callbackUrl,
+        string $apiKey
+    ): array {
+        $payload = [
+            'userId' => $merchantId,
+            'ProductId' => 0,
+            'playerAccount' => $playerAccount,
+            'areaName' => $areaName,
+            'payAmount' => round($payAmount, 2),
+            'PartitionId' => $partitionId,
+            'callbackUrl' => $callbackUrl,
+        ];
+
+        $filtered = [];
+        foreach ($payload as $key => $value) {
+            if ($value === null) {
+                continue;
+            }
+
+            if (is_string($value)) {
+                $value = trim($value);
+                if ($value === '') {
+                    continue;
+                }
+            }
+
+            $filtered[$key] = $value;
+        }
+
+        ksort($filtered, SORT_STRING);
+
+        $parts = [];
+        foreach ($filtered as $key => $value) {
+            $parts[] = $key . '=' . $value;
+        }
+
+        $filtered['sign'] = md5(implode('&', $parts) . $apiKey);
+        return $filtered;
+    }
+
+    private function requestManualRecharge(array $payload): array
+    {
+        $postData = json_encode($payload, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+        if ($postData === false) {
+            throw new \Exception('手动充值请求编码失败');
+        }
+
+        $ch = curl_init();
+        curl_setopt($ch, CURLOPT_URL, 'https://newapi.7xpay.com/api/ManualRecharge');
+        curl_setopt($ch, CURLOPT_POST, 1);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, $postData);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, [
+            'Content-Type: application/json',
+        ]);
+        curl_setopt($ch, CURLOPT_TIMEOUT, 15);
+
+        $response = curl_exec($ch);
+        if ($response === false) {
+            $err = curl_error($ch);
+            curl_close($ch);
+            throw new \Exception('手动充值请求失败: ' . $err);
+        }
+
+        $httpCode = (int)curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        curl_close($ch);
+
+        $responseData = json_decode($response, true);
+        if (!is_array($responseData)) {
+            throw new \Exception('手动充值响应格式错误: ' . $response);
+        }
+
+        if ($httpCode >= 400) {
+            $msg = isset($responseData['msg']) ? (string)$responseData['msg'] : ('HTTP ' . $httpCode);
+            throw new \Exception('手动充值请求失败: ' . $msg);
+        }
+
+        return $responseData;
+    }
+
+    private function buildGrantRemark(array $responseData, int $maxLength = 200): string
+    {
+        $parts = [];
+
+        if (!empty($responseData['msg'])) {
+            $parts[] = (string)$responseData['msg'];
+        }
+
+        if (!empty($responseData['data'])) {
+            if (is_scalar($responseData['data'])) {
+                $parts[] = 'data:' . (string)$responseData['data'];
+            } elseif (is_array($responseData['data'])) {
+                foreach (['orderNumber', 'serialNumber', 'orderNo', 'id'] as $key) {
+                    if (!empty($responseData['data'][$key])) {
+                        $parts[] = $key . ':' . (string)$responseData['data'][$key];
+                        break;
+                    }
+                }
+            }
+        }
+
+        if (!empty($responseData['partitionName'])) {
+            $parts[] = 'partition:' . (string)$responseData['partitionName'];
+        }
+
+        if (!empty($responseData['currencyName'])) {
+            $parts[] = 'currency:' . (string)$responseData['currencyName'];
+        }
+
+        $remark = trim(implode('; ', $parts));
+        if ($remark === '') {
+            $remark = 'manual recharge success';
+        }
+
+        if (function_exists('mb_strimwidth')) {
+            return mb_strimwidth($remark, 0, $maxLength, '', 'UTF-8');
+        }
+
+        return substr($remark, 0, $maxLength);
+    }
+
     /**
      * 格式化红包背包列表数据
      */
@@ -1746,6 +1873,9 @@ class Kill extends BaseController
         $czzh = trim((string)$this->request->param('czzh', ''));
         $czqf = trim((string)$this->request->param('czqf', ''));
         $qq = trim((string)$this->request->param('QQ', ''));
+        $apiKey = trim((string)$this->request->param('apiKey', ''));
+        $merchantId = trim((string)$this->request->param('merchantId', ''));
+        $partitionId = trim((string)$this->request->param('partitionId', ''));
 
         if ($openId === '') {
             return json(['code' => 0, 'msg' => 'open_id不能为空']);
@@ -1766,24 +1896,26 @@ class Kill extends BaseController
         if (empty($redBagIds)) {
             return json(['code' => 0, 'msg' => 'red_bag_id或red_bag_ids不能为空']);
         }
-
         if ($yxmc === '') {
             return json(['code' => 0, 'msg' => '游戏名称不能为空']);
         }
         if ($yxgw === '') {
             return json(['code' => 0, 'msg' => '游戏官网不能为空']);
         }
-        if ($hbmc === '') {
-            return json(['code' => 0, 'msg' => '充值货币名称不能为空']);
-        }
         if ($czzh === '') {
             return json(['code' => 0, 'msg' => '充值账号不能为空']);
         }
-        if ($czqf === '') {
-            return json(['code' => 0, 'msg' => '充值区服不能为空']);
-        }
         if ($qq === '') {
             return json(['code' => 0, 'msg' => '联系QQ不能为空']);
+        }
+        if ($apiKey === '') {
+            return json(['code' => 0, 'msg' => 'apiKey不能为空']);
+        }
+        if ($merchantId === '') {
+            return json(['code' => 0, 'msg' => 'merchantId不能为空']);
+        }
+        if ($partitionId === '') {
+            return json(['code' => 0, 'msg' => 'partitionId不能为空']);
         }
 
         $user = Db::table('ul_order_user')
@@ -1795,35 +1927,36 @@ class Kill extends BaseController
             return json(['code' => 0, 'msg' => '用户不存在']);
         }
 
-        $rows = Db::table('ul_user_kill_red_bag')
-            ->where('open_id', $openId)
-            ->whereIn('id', $redBagIds)
-            ->select()
-            ->toArray();
-
-        if (count($rows) !== count($redBagIds)) {
-            return json(['code' => 0, 'msg' => '存在红包不存在或不属于当前用户']);
-        }
-
-        foreach ($rows as $row) {
-            if ((int)($row['status'] ?? 0) !== 1) {
-                return json(['code' => 0, 'msg' => '存在已使用或不可用的红包']);
-            }
-
-            $amount = round((float)($row['amount'] ?? 0), 2);
-            if ($amount <= 0) {
-                return json(['code' => 0, 'msg' => '存在红包金额无效的记录']);
-            }
-        }
-
         $now = time();
         $useBatchNo = $this->createUseBatchNo($openId);
+        $responseData = [];
 
         Db::startTrans();
         try {
+            $rows = Db::table('ul_user_kill_red_bag')
+                ->where('open_id', $openId)
+                ->whereIn('id', $redBagIds)
+                ->lock(true)
+                ->select()
+                ->toArray();
+
+            if (count($rows) !== count($redBagIds)) {
+                throw new \Exception('存在红包不存在或不属于当前用户');
+            }
+
+            $totalAmount = 0;
             foreach ($rows as $row) {
+                if ((int)($row['status'] ?? 0) !== 1) {
+                    throw new \Exception('存在已使用或不可用的红包');
+                }
+
                 $rowId = (int)$row['id'];
                 $amount = round((float)($row['amount'] ?? 0), 2);
+                if ($amount <= 0) {
+                    throw new \Exception('存在红包金额无效的记录');
+                }
+
+                $totalAmount += $amount;
 
                 $ok = Db::table('ul_user_kill_red_bag')
                     ->where('id', $rowId)
@@ -1849,6 +1982,53 @@ class Kill extends BaseController
                 }
             }
 
+            $callbackUrl = request()->domain() . url('cq/kill/payCallback', [
+                'open_id' => $openId,
+                'red_bag_ids' => implode(',', $redBagIds),
+            ]);
+
+            $payload = $this->buildManualRechargePayload(
+                $merchantId,
+                $czzh,
+                $czqf,
+                $totalAmount,
+                $partitionId,
+                $callbackUrl,
+                $apiKey
+            );
+            $responseData = $this->requestManualRecharge($payload);
+
+            if (!isset($responseData['result']) || $responseData['result'] !== true) {
+                $msg = isset($responseData['msg']) ? (string)$responseData['msg'] : '充值请求失败';
+                throw new \Exception($msg);
+            }
+
+            $partitionName = isset($responseData['data']['partitionName']) ? (string)$responseData['data']['partitionName'] : '';
+            $currencyName = isset($responseData['data']['currencyName']) ? (string)$responseData['data']['currencyName'] : '';
+            $grantMark = $this->buildGrantRemark($responseData);
+            $orderNumber = isset($responseData['data']['orderNumber']) ? (string)$responseData['data']['orderNumber'] : '';
+
+            foreach ($rows as $row) {
+                $updateData = [
+                    'czqf' => $partitionName,
+                    'hbmc' => $currencyName,
+                    'grant_remark' => $orderNumber,
+                ];
+                if ($partitionName !== '') {
+                    $updateData['czqf'] = $partitionName;
+                }
+                if ($currencyName !== '') {
+                    $updateData['hbmc'] = $currencyName;
+                }
+
+                $grantOk = Db::table('ul_user_kill_red_bag')
+                    ->where('id', (int)$row['id'])
+                    ->update($updateData);
+                if ($grantOk === false) {
+                    throw new \Exception('更新红包充值信息失败，id=' . (int)$row['id']);
+                }
+            }
+
             $latestRows = Db::table('ul_user_kill_red_bag')
                 ->field('id,open_id,user_id,gw_id,gw_title,amount,red_image,status,remark,grant_remark,yxmc,yxgw,czje,hbmc,czzh,czqf,QQ,is_cz,grant_status,grant_time,use_batch_no,create_time,update_time')
                 ->where('open_id', $openId)
@@ -1861,12 +2041,6 @@ class Kill extends BaseController
 
             $latestRows = $this->formatRedBagRows($latestRows);
 
-            $totalAmount = 0;
-            foreach ($latestRows as &$latestRow) {
-                $totalAmount += round((float)($latestRow['amount'] ?? 0), 2);
-            }
-            unset($latestRow);
-
             return json([
                 'code' => 200,
                 'msg' => '红包已使用',
@@ -1875,6 +2049,7 @@ class Kill extends BaseController
                     'count' => count($latestRows),
                     'total_amount' => round($totalAmount, 2),
                     'rows' => $latestRows,
+                    'response' => $responseData,
                 ],
             ]);
         } catch (\Throwable $e) {
@@ -2167,5 +2342,150 @@ class Kill extends BaseController
                 'today_share_list' => $list,
             ],
         ]);
+    }
+
+    public function payCallback()
+    {
+        $queryData = $this->request->get();
+        if (!is_array($queryData)) {
+            $queryData = [];
+        }
+        if (empty($queryData) && !empty($_SERVER['QUERY_STRING'])) {
+            parse_str((string)$_SERVER['QUERY_STRING'], $queryData);
+        }
+
+        $data = $queryData;
+        $rawBody = file_get_contents('php://input');
+        $jsonBody = json_decode((string)$rawBody, true);
+        if (is_array($jsonBody)) {
+            $data = array_merge($data, $jsonBody);
+        }
+
+        $postData = $this->request->post();
+        if (is_array($postData) && !empty($postData)) {
+            $data = array_merge($data, $postData);
+        }
+
+        $paramData = $this->request->param();
+        if (is_array($paramData) && !empty($paramData)) {
+            $data = array_merge($data, $paramData);
+        }
+
+        $openId = isset($data['open_id']) ? trim((string)$data['open_id']) : '';
+        $redBagIds = [];
+        if (isset($data['red_bag_ids']) && is_array($data['red_bag_ids'])) {
+            $redBagIds = $data['red_bag_ids'];
+        } elseif (isset($data['red_bag_ids']) && is_string($data['red_bag_ids']) && trim($data['red_bag_ids']) !== '') {
+            $redBagIds = explode(',', trim($data['red_bag_ids']));
+        } elseif (isset($data['red_bag_id'])) {
+            $redBagIds = [intval($data['red_bag_id'])];
+        }
+        $redBagIds = array_values(array_unique(array_filter(array_map('intval', $redBagIds))));
+
+        if ($openId === '' || empty($redBagIds)) {
+            return response('fail', 200, ['Content-Type' => 'text/plain; charset=utf-8']);
+        }
+
+        $query = Db::table('ul_user_kill_red_bag')->whereIn('id', $redBagIds);
+        if ($openId !== '') {
+            $query->where('open_id', $openId);
+        }
+
+        $rows = $query->select()->toArray();
+        if (empty($rows) && !empty($redBagIds)) {
+            $rows = Db::table('ul_user_kill_red_bag')
+                ->whereIn('id', $redBagIds)
+                ->select()
+                ->toArray();
+        }
+        if (empty($rows)) {
+            return response('fail', 200, ['Content-Type' => 'text/plain; charset=utf-8']);
+        }
+
+        $matchedIds = array_values(array_unique(array_map(function ($row) {
+            return (int)($row['id'] ?? 0);
+        }, $rows)));
+        $matchedOpenIds = array_values(array_unique(array_filter(array_map(function ($row) {
+            return trim((string)($row['open_id'] ?? ''));
+        }, $rows))));
+        if (empty($matchedIds)) {
+            return response('fail', 200, ['Content-Type' => 'text/plain; charset=utf-8']);
+        }
+
+        $now = time();
+        $partitionName = isset($data['partitionName']) ? trim((string)$data['partitionName']) : '';
+        $playerAccount = isset($data['playerAccount']) ? trim((string)$data['playerAccount']) : '';
+        $orderNumber = isset($data['orderNumber']) ? trim((string)$data['orderNumber']) : '';
+
+        $grantRemark = 'callback';
+        $remarkParts = [];
+        $remarkMap = [
+            'open_id' => $openId,
+            'red_bag_ids' => implode(',', $matchedIds),
+            'query_open_id' => isset($queryData['open_id']) ? trim((string)$queryData['open_id']) : '',
+            'query_red_bag_ids' => isset($queryData['red_bag_ids']) ? (is_array($queryData['red_bag_ids']) ? implode(',', $queryData['red_bag_ids']) : trim((string)$queryData['red_bag_ids'])) : '',
+            'orderNumber' => $orderNumber,
+            'playerAccount' => $playerAccount,
+            'amount' => isset($data['amount']) ? trim((string)$data['amount']) : '',
+            'partitionId' => isset($data['partitionId']) ? trim((string)$data['partitionId']) : '',
+            'partitionName' => $partitionName,
+        ];
+        foreach ($remarkMap as $key => $value) {
+            if ($value === '') {
+                continue;
+            }
+            $remarkParts[] = $key . '=' . $value;
+        }
+        if (!empty($remarkParts)) {
+            $grantRemark .= '; ' . implode('; ', $remarkParts);
+        }
+        if (function_exists('mb_strimwidth')) {
+            $grantRemark = mb_strimwidth($grantRemark, 0, 200, '', 'UTF-8');
+        } else {
+            $grantRemark = substr($grantRemark, 0, 200);
+        }
+
+        $updateData = [
+            'grant_status' => 1,
+            'grant_time' => $now,
+            'grant_remark' => $orderNumber,
+        ];
+        if ($partitionName !== '') {
+            $updateData['czqf'] = $partitionName;
+        }
+
+        $affected = Db::table('ul_user_kill_red_bag')
+            ->whereIn('id', $matchedIds)
+            ->update($updateData);
+
+        if ($affected === false) {
+            return response('fail', 200, ['Content-Type' => 'text/plain; charset=utf-8']);
+        }
+
+        $verifyQuery = Db::table('ul_user_kill_red_bag')->whereIn('id', $matchedIds);
+        if (!empty($matchedOpenIds)) {
+            $verifyQuery->whereIn('open_id', $matchedOpenIds);
+        }
+        $verifiedRows = $verifyQuery
+            ->field('id,grant_status,grant_time,grant_remark')
+            ->select()
+            ->toArray();
+        if (count($verifiedRows) !== count($matchedIds)) {
+            return response('fail', 200, ['Content-Type' => 'text/plain; charset=utf-8']);
+        }
+
+        foreach ($verifiedRows as $verifiedRow) {
+            if ((int)($verifiedRow['grant_status'] ?? 0) !== 1) {
+                return response('fail', 200, ['Content-Type' => 'text/plain; charset=utf-8']);
+            }
+            if ((int)($verifiedRow['grant_time'] ?? 0) <= 0) {
+                return response('fail', 200, ['Content-Type' => 'text/plain; charset=utf-8']);
+            }
+            if ((string)($verifiedRow['grant_remark'] ?? '') === '') {
+                return response('fail', 200, ['Content-Type' => 'text/plain; charset=utf-8']);
+            }
+        }
+
+        return response('success', 200, ['Content-Type' => 'text/plain; charset=utf-8']);
     }
 }

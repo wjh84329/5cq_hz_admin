@@ -32,7 +32,7 @@ return [
     'startPort'             => 2000,
     'daemonize'             => false,
     'pingInterval'          => 30,
-    'pingNotResponseLimit'  => 0,
+    'pingNotResponseLimit'  => 2,
     'pingData'              => '{"type":"ping"}',
 
     // BusinsessWorker配置
