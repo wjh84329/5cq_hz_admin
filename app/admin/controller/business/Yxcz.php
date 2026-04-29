@@ -6,6 +6,7 @@ namespace app\admin\controller\business;
 
 use app\admin\model\CoinGoods;
 use app\admin\traits\Curd;
+use app\service\GatewayPush;
 use app\common\controller\AdminController;
 use app\admin\service\annotation\ControllerAnnotation;
 use app\admin\service\annotation\NodeAnotation;
@@ -201,6 +202,7 @@ class Yxcz extends AdminController
             
                 // 提交事务
                 Db::commit();
+                GatewayPush::sendUserInfoUpdate($info['open_id']);
                 return json(['code' => 1, 'msg' => '退回成功']);
             } catch (\Exception $e) {
                 // 回滚事务

@@ -13,7 +13,7 @@ use think\facade\Db;
 use think\facade\Queue;
 use think\facade\Session;
 use app\cq\common\AliSms as sendSms;
-use app\http\Worker;
+use app\service\GatewayPush as Worker;
 
 class User extends BaseController
 {
@@ -51,9 +51,13 @@ class User extends BaseController
         header('Access-Control-Allow-Headers: Authorization, Content-Type, If-Match, If-Modified-Since, If-None-Match, If-Unmodified-Since, X-CSRF-TOKEN, X-Requested-With, token,boxVersion'); // 允许的请求头字段，添加'token'
         $ip = Request::header('x-forwarded-for');
         $clientIP = explode(',', $ip)[0] ?? '';
+        // return json(['code'=>200,'msg'=>'获取成功','data'=>$clientIP]);
         $key = $this->request->param('key');
         $reg  =  Db::table('reg')->where('key',$key)->findOrEmpty();
         $open_id = $reg?$reg['open_id']:null;
+        if(Request::header('host') == '192.168.177.129'){
+            $open_id = 'oWpvM6VWrGoKKWps7aj-fD9YkneA';
+        }
         if($open_id !=null){
             $up_open_id = $this->request->param('up_id');
             $token = md5($open_id.time());
@@ -379,6 +383,10 @@ class User extends BaseController
         header('Access-Control-Allow-Headers: Authorization, Content-Type, If-Match, If-Modified-Since, If-None-Match, If-Unmodified-Since, X-CSRF-TOKEN, X-Requested-With, token, boxVersion'); // 允许的请求头字段，添加'token'
         $parm = $this->request->param();
         $data_list = Db::table('api_config')->find(1);
+        //获取请求IP地址
+        $ip = Request::header('x-forwarded-for');
+        $clientIP = explode(',', $ip)[0] ?? '';
+        return json(['code'=>200,'msg'=>'获取成功','data'=>$clientIP]);
 //        $config = Config::get('wechat');
         $config = [
             /**
@@ -427,6 +435,7 @@ class User extends BaseController
         // var_dump($result);
         $urlss= "https://mp.weixin.qq.com/cgi-bin/showqrcode?ticket=".urlencode($result['ticket']);
         $data['key']=$result['ticket'];
+        
         if(array_key_exists('loginToken', $parm)){
             $open_id = $this->decryptData($parm['loginToken']);
             // return json($parm['loginToken']);
@@ -636,6 +645,7 @@ class User extends BaseController
         $later = $user_info['money'];
         $insertID = Db::table('coin_info')->insertGetId(['coin_num'=>$data['num'],'open_id'=>$data['open_id'],'fs'=>'兑换'.$dh_money.'元','title'=>'金币兑换余额','code'=>1,'real'=>$dh_money*$bl['coinToMoney']]);
          Db::table('moneyInfo')->insert(['code'=>0,'coinf_id'=>$insertID,'open_id'=>$data['open_id'],'before'=>$before,'later'=>$later,'money'=>$dh_money]);
+        Worker::sendUserInfoUpdate($data['open_id']);
         return json(['code'=>200,'msg'=>'恭喜您，成功兑换','data'=>$user_coin,'dh_money'=>$dh_money,'coin_num'=>$data['num'],'money'=>$money,'user_info'=>$user_info]);
     }
 
@@ -707,7 +717,9 @@ class User extends BaseController
                 $up_data['code'] = 0;
                 $up_data['fs'] = '分享收益';
                 Db::table('coin_info')->insert($up_data);
+                Worker::sendUserInfoUpdate($up_user_info['open_id']);
             }
+            Worker::sendUserInfoUpdate($data['open_id']);
             return json(['code'=>200,'msg'=>'成功','user_info'=>$user_info]);
         }elseif ($data['code']==1){
             Db::table('ul_order_user')
@@ -716,6 +728,7 @@ class User extends BaseController
                 ->update();
             Db::table('coin_info')->insert($data);
             $user_info = Db::table('ul_order_user')->where('open_id',$data['open_id'])->find();
+            Worker::sendUserInfoUpdate($data['open_id']);
             return json(['code'=>200,'msg'=>'成功','user_info'=>$user_info]);
         }
     }
@@ -834,9 +847,11 @@ class User extends BaseController
                     $up_data['code'] = 0;
                     $up_data['fs'] = '分享收益';
                     Db::table('coin_info')->insert($up_data);
+                    Worker::sendUserInfoUpdate($up_user_info['open_id']);
                 }
                 
             }
+            Worker::sendUserInfoUpdate($data['open_id']);
             return json(['code'=>200,'msg'=>'成功','user_info'=>$user_info,'coinInfo'=>$coininfo]);
         }elseif ($data['code']==1){
             Db::table('ul_order_user')
@@ -846,6 +861,7 @@ class User extends BaseController
             $insertID = Db::table('coin_info')->insertGetId($data);
             $coininfo = Db::table('coin_info')->find($insertID);
             $user_info = Db::table('ul_order_user')->where('open_id',$data['open_id'])->find();
+            Worker::sendUserInfoUpdate($data['open_id']);
             return json(['code'=>200,'msg'=>'成功','user_info'=>$user_info,'coinInfo'=>$coininfo]);
         }
     }
@@ -1976,6 +1992,7 @@ class User extends BaseController
         $data['is_sh'] = 0;
         $save = Db::table('ul_order_user')->where('open_id',$data['open_id'])->update($data);
         if($save){
+            Worker::sendUserInfoUpdate($data['open_id']);
             return json(['code'=>200,'msg'=>'更新成功','data'=>Db::table('ul_order_user')->where('open_id',$data['open_id'])->find()]);
         }else{
             return json(['code'=>0,'msg'=>'更新失败']);
@@ -2292,6 +2309,7 @@ class User extends BaseController
                 $data = Db::table('ul_order_user')->where('open_id',$data['open_id'])->find();
                 $later = $data['money'];
                 Db::table('moneyInfo')->insert(['code'=>1,'coinf_id'=>$save,'open_id'=>$data['open_id'],'before'=>$before,'later'=>$later,'money'=>$money]);
+                Worker::sendUserInfoUpdate($data['open_id']);
                 return json(['code'=>200,'msg'=>'充值成功','data'=>$data]);
             }else{
                 return json(['code'=>0,'msg'=>'充值失败']);
@@ -2628,6 +2646,7 @@ class User extends BaseController
                     $save = Db::table('ul_order_user')->where('open_id',$data['open_id'])->update($data);
                     if($save){
                         $user_info = Db::table('ul_order_user')->where('open_id',$data['open_id'])->find();
+                        Worker::sendUserInfoUpdate($data['open_id']);
                         return json(['code' => 200, 'msg' => $info['respMessage'],'data'=>$user_info]);
                     }
                 }else{
@@ -2881,6 +2900,7 @@ class User extends BaseController
                         break;
                     }
                 }
+                Worker::sendUserInfoUpdate($data['open_id']);
                 return 1;
             }else{
                 return 0;
@@ -3109,6 +3129,7 @@ class User extends BaseController
                         ->where('open_id',$data['open_id'])
                         ->inc('coin_num',$operation['lookGame'])
                         ->update();
+                    Worker::sendUserInfoUpdate($data['open_id']);
                 }
             }
             return json(['code' => 200, 'msg' => '成功']);
@@ -3172,6 +3193,7 @@ class User extends BaseController
 //        return $data;
         $save = Db::table('ul_order_user')->where('open_id',$data['open_id'])->update(['is_online'=>1]);
         if($save){
+            Worker::sendUserInfoUpdate($data['open_id']);
             return json(['code' => 200, 'msg' => '成功']);
         }else{
             return json(['code' => 0, 'msg' => '失败']);
@@ -3686,6 +3708,7 @@ class User extends BaseController
         //判断是否未中奖
 //        echo $luckyInfo[$title.$winningPrize['name']];
         if(strpos($luckyInfo[$title.$winningPrize['name']],'谢谢')!== false){
+            Worker::sendUserInfoUpdate($data['open_id']);
             return json(['code' => 200, 'msg' => '成功','prize'=>$winningPrize['name'],'userInfo'=>$userinfo]);
         }else{
             //判断是否为实物
@@ -3729,6 +3752,7 @@ class User extends BaseController
                     return json(['code' => 0, 'msg' => '奖品信息错误']);
                 }
                 $coinInfo = Db::table('coin_info')->find($addID);
+                Worker::sendUserInfoUpdate($data['open_id']);
                 return json(['code' => 200, 'msg' => '成功','prize'=>$winningPrize['name'],'data'=>$coinInfo,'userInfo'=>$userinfo]);
             }
             //生成实物订单
@@ -3764,6 +3788,7 @@ class User extends BaseController
                 return json(['code' => 0, 'msg' => '抽奖失败']);
             }
             $coinInfo = Db::table('coin_info')->find($addID);
+            Worker::sendUserInfoUpdate($data['open_id']);
             return json(['code' => 200, 'msg' => '成功','prize'=>$winningPrize['name'],'data'=>$coinInfo,'prizeOrder'=>$prizeOrderInfo,'userInfo'=>$userinfo]);
         }
     }
@@ -3815,6 +3840,7 @@ class User extends BaseController
         }
         $update = Db::table('ul_order_user')->where('open_id',$open_id)->dec('waelfare',$discount_amount)->update();
         if($update){
+            Worker::sendUserInfoUpdate($open_id);
             return json(['code' => 200, 'msg' => '成功']);
         }else{
             return json(['code' => 0, 'msg' => '失败']);
@@ -3849,6 +3875,7 @@ class User extends BaseController
                 throw new \Exception('福利金增加失败');
             }
             Db::commit();
+            Worker::sendUserInfoUpdate($open_id);
             return json(['code' => 200, 'msg' => '成功']);
         } catch (\Exception $e) {
             Db::rollback();

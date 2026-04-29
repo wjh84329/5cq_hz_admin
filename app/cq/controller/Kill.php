@@ -7,7 +7,7 @@ use app\BaseController;
 use think\db\Where;
 use think\facade\Db;
 use think\facade\Cache;
-use app\http\Worker;
+use app\service\GatewayPush as Worker;
 
 class Kill extends BaseController
 {
@@ -732,6 +732,7 @@ class Kill extends BaseController
     {
         $openId = trim((string)$this->request->param('open_id', ''));
         $gwId = (int)$this->request->param('gw_id', 0);
+        $requestId = trim((string)$this->request->param('request_id', ''));
 
         if ($openId === '') {
             return json(['code' => 0, 'msg' => 'open_id不能为空']);
@@ -953,37 +954,210 @@ class Kill extends BaseController
                 ->where('open_id', $openId)
                 ->find();
 
-    
-            Db::table('user_log')->insert(['log'=>'<p><span style="color:#ff0000;">会员【'.$user['name'].'】</span>在金币打怪中击败了<span style="color:#FFA500;">'.$monster['title'].'</span></p>']);
-            Worker::broadcastLatestLog();
+            $drawResponseData = [
+                'request_id' => $requestId,
+                'consume_coin' => $consumeCoin,
+                'monster' => [
+                    'id' => (int)$monster['id'],
+                    'title' => $this->cleanUtf8((string)$monster['title']),
+                    'images' => $this->cleanUtf8((string)$monster['images']),
+                ],
+                'rewards' => $rewards,
+                'red_reward' => [
+                    'hit' => (int)$redReward['hit'],
+                    'amount' => (float)$redReward['amount'],
+                    'probability' => (int)$redReward['probability'],
+                    'image' => (string)$redReward['image'],
+                    'config' => (string)$redReward['config'],
+                ],
+                'bag' => $bagResults,
+                'red_bag' => $redBag,
+                'user' => $latestUser,
+            ];
+
+            $this->sendKillDrawResult($openId, $requestId, $drawResponseData);
+            $this->sendKillBagUpdated($openId);
             Worker::sendUserInfoUpdate($user['open_id']);
+
+            Db::table('user_log')->insert([
+                'log' => '<p><span style="color:#ff0000;">会员【' . $user['name'] . '】</span>在金币打怪中击败了<span style="color:#FFA500;">' . $monster['title'] . '</span></p>'
+            ]);
+            Worker::broadcastLatestLog();
+
+            $drawResponseData['sync_via_ws'] = 1;
             return json([
                 'code' => 200,
                 'msg' => '抽奖成功',
-                'data' => [
-                    'consume_coin' => $consumeCoin,
-                    'monster' => [
-                        'id' => (int)$monster['id'],
-                        'title' => $this->cleanUtf8((string)$monster['title']),
-                        'images' => $this->cleanUtf8((string)$monster['images']),
-                    ],
-                    'rewards' => $rewards,
-                    'red_reward' => [
-                        'hit' => (int)$redReward['hit'],
-                        'amount' => (float)$redReward['amount'],
-                        'probability' => (int)$redReward['probability'],
-                        'image' => (string)$redReward['image'],
-                        'config' => (string)$redReward['config'],
-                    ],
-                    'bag' => $bagResults,
-                    'red_bag' => $redBag,
-                    'user' => $latestUser,
-                ],
+                'data' => $drawResponseData,
             ]);
         } catch (\Throwable $e) {
             Db::rollback();
             return json(['code' => 0, 'msg' => '抽奖失败: ' . $e->getMessage()]);
         }
+    }
+
+    private function sendKillDrawResult(string $openId, string $requestId, array $data): void
+    {
+        $openId = trim($openId);
+        if ($openId === '') {
+            return;
+        }
+
+        Worker::sendMessageByUid($openId, json_encode([
+            'type' => 'kill_draw_result',
+            'code' => 200,
+            'msg' => '抽奖成功',
+            'open_id' => $openId,
+            'request_id' => $requestId,
+            'data' => $data,
+        ], JSON_UNESCAPED_UNICODE));
+    }
+
+    private function sendKillBagUpdated(string $openId): void
+    {
+        $bagData = $this->buildBagListData($openId, 1, 100, 0);
+        if (!$bagData) {
+            return;
+        }
+
+        Worker::sendMessageByUid($openId, json_encode([
+            'type' => 'kill_bag_updated',
+            'code' => 200,
+            'msg' => '背包已更新',
+            'open_id' => $openId,
+            'data' => $bagData,
+        ], JSON_UNESCAPED_UNICODE));
+    }
+
+    private function buildBagListData(string $openId, int $page = 1, int $limit = 20, int $withZero = 0): ?array
+    {
+        $killCfg = Db::table('hz_kill')->where('id', 1)->find();
+        $openId = trim($openId);
+        $page = max(1, $page);
+        $limit = max(1, min(100, $limit));
+
+        if ($openId === '') {
+            return null;
+        }
+
+        $user = Db::table('ul_order_user')
+            ->field('id,open_id,lv')
+            ->where('open_id', $openId)
+            ->find();
+
+        if (!$user) {
+            return null;
+        }
+
+        $query = Db::table('ul_user_item_bag')
+            ->field('id,item_id,item_title,item_images,total_num,used_num,status,update_time,create_time')
+            ->where('open_id', $openId);
+
+        if ($withZero !== 1) {
+            $query->where('total_num', '>', 0);
+        }
+
+        $count = (clone $query)->count();
+        $list = $query
+            ->order('update_time desc,id desc')
+            ->page($page, $limit)
+            ->select()
+            ->toArray();
+
+        $itemIds = array_unique(array_column($list, 'item_id'));
+        if (!empty($itemIds)) {
+            $itemRows = Db::table('hz_kill_wp')
+                ->field('id,value_min,value_max,title,images,exp,mark')
+                ->whereIn('id', $itemIds)
+                ->select()
+                ->toArray();
+
+            $itemMap = [];
+            foreach ($itemRows as $r) {
+                $itemMap[(int)$r['id']] = $r;
+            }
+        } else {
+            $itemMap = [];
+        }
+
+        foreach ($list as &$row) {
+            $total = max(0, (int)($row['total_num'] ?? 0));
+            $used = max(0, (int)($row['used_num'] ?? 0));
+            if ($used > $total) {
+                $used = $total;
+            }
+
+            $row['item_id'] = (int)$row['item_id'];
+            $row['total_num'] = $total;
+            $row['used_num'] = $used;
+            $row['usable_num'] = $total - $used;
+            $row['status'] = (int)$row['status'];
+            $row['item_title'] = $this->cleanUtf8((string)($row['item_title'] ?? ''));
+            $row['item_images'] = $this->cleanUtf8((string)($row['item_images'] ?? ''));
+            $row['update_time'] = (int)$row['update_time'];
+            $row['create_time'] = (int)$row['create_time'];
+
+            $cfg = $itemMap[(int)$row['item_id']] ?? null;
+            $row['value_min'] = $cfg ? (float)($cfg['value_min'] ?? 0) : 0;
+            $row['value_max'] = $cfg ? (float)($cfg['value_max'] ?? 0) : 0;
+            $row['exp'] = $cfg ? (int)($cfg['exp'] ?? 0) : 0;
+            $row['mark'] = $cfg ? $this->cleanUtf8((string)($cfg['mark'] ?? '')) : '';
+            if ($cfg && empty($row['item_title'])) {
+                $row['item_title'] = $this->cleanUtf8((string)($cfg['title'] ?? ''));
+            }
+            if ($cfg && empty($row['item_images'])) {
+                $row['item_images'] = $this->cleanUtf8((string)($cfg['images'] ?? ''));
+            }
+        }
+        unset($row);
+
+        $redQuery = Db::table('ul_user_kill_red_bag')
+            ->field('id,amount,red_image,status,gw_id,gw_title,yxmc,yxgw,czje,hbmc,czzh,czqf,QQ,is_cz,create_time,update_time')
+            ->where('open_id', $openId)
+            ->where('status', 1);
+
+        $redCount = (clone $redQuery)->count();
+        $redList = $redQuery
+            ->order('create_time desc,id desc')
+            ->page($page, $limit)
+            ->select()
+            ->toArray();
+
+        foreach ($redList as &$redRow) {
+            $redRow['id'] = (int)$redRow['id'];
+            $redRow['bag_type'] = 'red';
+            $redRow['amount'] = round((float)($redRow['amount'] ?? 0), 2);
+            $redRow['red_image'] = $this->cleanUtf8((string)($killCfg['red_image'] ?? ''));
+            $redRow['status'] = (int)($redRow['status'] ?? 1);
+            $redRow['gw_id'] = (int)($redRow['gw_id'] ?? 0);
+            $redRow['gw_title'] = $this->cleanUtf8((string)($redRow['gw_title'] ?? ''));
+            $redRow['red_image'] = $this->cleanUtf8((string)($redRow['red_image'] ?? ''));
+            $redRow['yxmc'] = $this->cleanUtf8((string)($redRow['yxmc'] ?? ''));
+            $redRow['yxgw'] = $this->cleanUtf8((string)($redRow['yxgw'] ?? ''));
+            $redRow['czje'] = round((float)($redRow['czje'] ?? 0), 2);
+            $redRow['hbmc'] = $this->cleanUtf8((string)($redRow['hbmc'] ?? ''));
+            $redRow['czzh'] = $this->cleanUtf8((string)($redRow['czzh'] ?? ''));
+            $redRow['czqf'] = $this->cleanUtf8((string)($redRow['czqf'] ?? ''));
+            $redRow['QQ'] = $this->cleanUtf8((string)($redRow['QQ'] ?? ''));
+            $redRow['is_cz'] = (int)($redRow['is_cz'] ?? 0);
+            $redRow['create_time'] = (int)($redRow['create_time'] ?? 0);
+            $redRow['update_time'] = (int)($redRow['update_time'] ?? 0);
+        }
+        unset($redRow);
+
+        return [
+            'user' => [
+                'id' => (int)$user['id'],
+                'open_id' => (string)$user['open_id'],
+                'lv' => (string)$user['lv'],
+            ],
+            'page' => $page,
+            'limit' => $limit,
+            'count' => (int)$count,
+            'list' => $list,
+            'red_count' => (int)$redCount,
+            'red_list' => $redList,
+        ];
     }
     /**
      * 入背包并写流水
@@ -1071,149 +1245,23 @@ class Kill extends BaseController
      */
     public function bag_list()
     {
-        $killCfg = Db::table('hz_kill')->where('id', 1)->find();
         $openId = trim((string)$this->request->param('open_id', ''));
         $page = max(1, (int)$this->request->param('page', 1));
         $limit = (int)$this->request->param('limit', 20);
         $withZero = (int)$this->request->param('with_zero', 0);
-
         if ($openId === '') {
             return json(['code' => 0, 'msg' => 'open_id不能为空']);
         }
 
-        if ($limit <= 0) {
-            $limit = 20;
-        }
-        if ($limit > 100) {
-            $limit = 100;
-        }
-
-        $user = Db::table('ul_order_user')
-            ->field('id,open_id,lv')
-            ->where('open_id', $openId)
-            ->find();
-
-        if (!$user) {
+        $data = $this->buildBagListData($openId, $page, $limit, $withZero);
+        if (!$data) {
             return json(['code' => 0, 'msg' => '用户不存在']);
         }
-
-        $query = Db::table('ul_user_item_bag')
-            ->field('id,item_id,item_title,item_images,total_num,used_num,status,update_time,create_time')
-            ->where('open_id', $openId);
-
-        // 默认只看有库存的
-        if ($withZero !== 1) {
-            $query->where('total_num', '>', 0);
-        }
-
-        $count = (clone $query)->count();
-
-        $list = $query
-            ->order('update_time desc,id desc')
-            ->page($page, $limit)
-            ->select()
-            ->toArray();
-
-        // 查物品配置补充价值字段
-        $itemIds = array_unique(array_column($list, 'item_id'));
-        if (!empty($itemIds)) {
-            $itemRows = Db::table('hz_kill_wp')
-                ->field('id,value_min,value_max,title,images,exp,mark')
-                ->whereIn('id', $itemIds)
-                ->select()
-                ->toArray();
-
-            $itemMap = [];
-            foreach ($itemRows as $r) {
-                $itemMap[(int)$r['id']] = $r;
-            }
-        } else {
-            $itemMap = [];
-        }
-
-        foreach ($list as &$row) {
-            $total = max(0, (int)($row['total_num'] ?? 0));
-            $used = max(0, (int)($row['used_num'] ?? 0));
-            if ($used > $total) {
-                $used = $total;
-            }
-
-            $row['item_id'] = (int)$row['item_id'];
-            $row['total_num'] = $total;
-            $row['used_num'] = $used;
-            $row['usable_num'] = $total - $used;
-            $row['status'] = (int)$row['status'];
-            $row['item_title'] = $this->cleanUtf8((string)($row['item_title'] ?? ''));
-            $row['item_images'] = $this->cleanUtf8((string)($row['item_images'] ?? ''));
-            $row['update_time'] = (int)$row['update_time'];
-            $row['create_time'] = (int)$row['create_time'];
-
-            $cfg = $itemMap[(int)$row['item_id']] ?? null;
-            $row['value_min'] = $cfg ? (float)($cfg['value_min'] ?? 0) : 0;
-            $row['value_max'] = $cfg ? (float)($cfg['value_max'] ?? 0) : 0;
-            $row['exp'] = $cfg ? (int)($cfg['exp'] ?? 0) : 0;
-            $row['mark'] = $cfg ? $this->cleanUtf8((string)($cfg['mark'] ?? '')) : '';
-            // 兼容老接口字段
-            if ($cfg && empty($row['item_title'])) {
-                $row['item_title'] = $this->cleanUtf8((string)($cfg['title'] ?? ''));
-            }
-            if ($cfg && empty($row['item_images'])) {
-                $row['item_images'] = $this->cleanUtf8((string)($cfg['images'] ?? ''));
-            }
-        }
-        unset($row);
-
-        $redQuery = Db::table('ul_user_kill_red_bag')
-            ->field('id,amount,red_image,status,gw_id,gw_title,yxmc,yxgw,czje,hbmc,czzh,czqf,QQ,is_cz,create_time,update_time')
-            ->where('open_id', $openId)
-            ->where('status', 1);
-
-        $redCount = (clone $redQuery)->count();
-
-        $redList = $redQuery
-            ->order('create_time desc,id desc')
-            ->page($page, $limit)
-            ->select()
-            ->toArray();
-
-        foreach ($redList as &$redRow) {
-            $redRow['id'] = (int)$redRow['id'];
-            $redRow['bag_type'] = 'red';
-            $redRow['amount'] = round((float)($redRow['amount'] ?? 0), 2);
-            $redRow['red_image'] = $this->cleanUtf8((string)($killCfg['red_image'] ?? ''));
-            $redRow['status'] = (int)($redRow['status'] ?? 1);
-            $redRow['gw_id'] = (int)($redRow['gw_id'] ?? 0);
-            $redRow['gw_title'] = $this->cleanUtf8((string)($redRow['gw_title'] ?? ''));
-            $redRow['red_image'] = $this->cleanUtf8((string)($redRow['red_image'] ?? ''));
-            $redRow['yxmc'] = $this->cleanUtf8((string)($redRow['yxmc'] ?? ''));
-            $redRow['yxgw'] = $this->cleanUtf8((string)($redRow['yxgw'] ?? ''));
-            $redRow['czje'] = round((float)($redRow['czje'] ?? 0), 2);
-            $redRow['hbmc'] = $this->cleanUtf8((string)($redRow['hbmc'] ?? ''));
-            $redRow['czzh'] = $this->cleanUtf8((string)($redRow['czzh'] ?? ''));
-            $redRow['czqf'] = $this->cleanUtf8((string)($redRow['czqf'] ?? ''));
-            $redRow['QQ'] = $this->cleanUtf8((string)($redRow['QQ'] ?? ''));
-            $redRow['is_cz'] = (int)($redRow['is_cz'] ?? 0);
-            $redRow['create_time'] = (int)($redRow['create_time'] ?? 0);
-            $redRow['update_time'] = (int)($redRow['update_time'] ?? 0);
-        }
-        unset($redRow);
 
         return json([
             'code' => 200,
             'msg' => '成功',
-            'data' => [
-                'user' => [
-                    'id' => (int)$user['id'],
-                    'open_id' => (string)$user['open_id'],
-                    'lv' => (string)$user['lv'],
-                ],
-                'page' => $page,// 当前页码
-                'limit' => $limit,// 分页信息
-                'count' => (int)$count,// 背包物品总数
-                'list' => $list,// 背包物品列表
-                'red_count' => (int)$redCount,// 红包数量
-                'red_list' => $redList,// 红包列表（如果有的话）
-            ],
+            'data' => $data,
         ]);
     }
 
@@ -1266,6 +1314,7 @@ class Kill extends BaseController
         $totalCoin = 0;
         $totalExp = 0;
         $now = time();
+        $worldLogs = [];
 
         Db::startTrans();
         try {
@@ -1332,8 +1381,7 @@ class Kill extends BaseController
                     'coin' => $coin,
                     'exp' => $exp,
                 ];
-                Db::table('user_log')->insert(['log'=>'<p><span style="color:#ff0000;">会员【'.$user['name'].'】</span>在线回收了<span style="color:#4AAC4E;">'.$cfg['title'].'X'.$num.'</span></p>']);
-                Worker::broadcastLatestLog();
+                $worldLogs[] = '<p><span style="color:#ff0000;">会员【' . $user['name'] . '】</span>在线回收了<span style="color:#4AAC4E;">' . $cfg['title'] . 'X' . $num . '</span></p>';
             }
 
             // 增加金币
@@ -1408,7 +1456,17 @@ class Kill extends BaseController
             $latestUser = Db::table('ul_order_user')
                 ->where('open_id', $openId)
                 ->find();
+
+            $this->sendKillBagUpdated($openId);
             Worker::sendUserInfoUpdate($user['open_id']);
+
+            if (!empty($worldLogs)) {
+                foreach ($worldLogs as $logHtml) {
+                    Db::table('user_log')->insert(['log' => $logHtml]);
+                }
+                Worker::broadcastLatestLog();
+            }
+
             return json([
                 'code' => 200,
                 'msg' => '回收成功',
@@ -2040,6 +2098,7 @@ class Kill extends BaseController
             Db::commit();
 
             $latestRows = $this->formatRedBagRows($latestRows);
+            $this->sendKillBagUpdated($openId);
 
             return json([
                 'code' => 200,

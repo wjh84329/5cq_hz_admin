@@ -3,7 +3,7 @@
 use Carbon\Carbon;
 use think\facade\Cache;
 use think\facade\Db;
-use app\http\Worker;
+use app\service\GatewayPush as Worker;
 
 /**
  * Notes:生成UID

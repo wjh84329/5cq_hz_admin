@@ -6,12 +6,11 @@ namespace app\admin\controller\business;
 
 use app\admin\model\CoinGoods;
 use app\admin\traits\Curd;
+use app\service\GatewayPush;
 use app\common\controller\AdminController;
 use app\admin\service\annotation\ControllerAnnotation;
 use app\admin\service\annotation\NodeAnotation;
-use think\App;
 use think\facade\Db;
-use think\facade\Log;
 
 /**
  * Class Goods
@@ -71,20 +70,12 @@ class User extends AdminController
     public function modify($id){
         $data = $this->request->param();
         $save = Db::table('ul_order_user')->where('id',$id)->update([$data['field']=>$data['value']]);
-        if($save){
-            // 获取请求信息
-            $request = request();
-            $requestData = [
-                'method' => $request->method(),
-                'url' => $request->url(),
-                'param' => $request->param(),
-            ];
-
-            // 记录日志
-            Log::channel('info_channel')->write('Request data: ' . json_encode($requestData), 'client');
+        if($save !== false){
+            $this->pushUserInfoUpdateById($id);
             $this->success('保存成功');
         }
-//        $this->success('保存成功');
+
+        $this->error('保存失败');
     }
 
     public function edit($id){
@@ -100,6 +91,7 @@ class User extends AdminController
                     $save = Db::table('ul_order_user')->where('id',$id)->update(['nickname'=>$data['name'],'avatar'=>$data['avatar2'],'is_sh'=>2]);
                 }
                 if($save){
+                    $this->pushUserInfoUpdateById($id);
                     return json(['code'=>1,'msg'=>'审核成功']);
                 }else{
                     return json(['code'=>0,'msg'=>'审核失败']);
@@ -139,5 +131,13 @@ class User extends AdminController
             'coinDecList'=>$coinDecList,'coinDecTotal'=>$coinDecTotal,'coinCzCount'=>$coinCzCount,
             'coinCzTotal'=>$coinCzTotal,'coinCzCoin'=>$coinCzCoin,'Czcount'=>$Czcount,'CzCgCount'=>$CzCgCount,'CzCgMoney'=>$CzCgMoney
         ]);
+    }
+
+    protected function pushUserInfoUpdateById($id)
+    {
+        $openId = Db::table('ul_order_user')->where('id', $id)->value('open_id');
+        if (!empty($openId)) {
+            GatewayPush::sendUserInfoUpdate($openId);
+        }
     }
 }
