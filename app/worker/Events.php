@@ -1,6 +1,7 @@
 <?php
 namespace app\worker;
 
+use app\service\UserDeviceSession;
 use GatewayWorker\Lib\Gateway;
 use think\facade\Cache;
 use think\facade\Db;
@@ -113,6 +114,7 @@ class Events
     {
         $openId = trim((string)($payload['open_id'] ?? ''));
         $token  = trim((string)($payload['token'] ?? ''));
+        $deviceId = UserDeviceSession::normalizeDeviceId($payload['device_id'] ?? '');
 
         if ($openId === '' || $token === '') {
             self::sendJson($client_id, [
@@ -130,8 +132,10 @@ class Events
 
         $payload['open_id'] = $openId;
         $payload['token'] = $token;
+        $payload['device_id'] = $deviceId;
 
-        self::registerClientSession($client_id, $openId, $token, true);
+        UserDeviceSession::syncLogin($deviceId, $openId, $token);
+        self::registerClientSession($client_id, $openId, $token, true, $deviceId);
         self::$cqConnections[$openId] = $client_id;
 
         self::handle5cqLogin($client_id, $payload, 0);
@@ -228,13 +232,14 @@ class Events
         return false;
     }
 
-    private static function registerClientSession($client_id, $openId, $token, $trackTime = false)
+    private static function registerClientSession($client_id, $openId, $token, $trackTime = false, $deviceId = '')
     {
         Gateway::bindUid($client_id, $openId);
 
         self::$clientSessions[$client_id] = [
             'open_id'        => (string)$openId,
             'token'          => (string)$token,
+            'device_id'      => UserDeviceSession::normalizeDeviceId($deviceId),
             'track_time'     => (bool)$trackTime,
             'last_heartbeat' => time(),
         ];
@@ -261,6 +266,7 @@ class Events
         $session = self::$clientSessions[$client_id];
         $openId = (string)($session['open_id'] ?? '');
         $token = (string)($session['token'] ?? '');
+        $deviceId = (string)($session['device_id'] ?? '');
         if ($openId === '' || $token === '') {
             self::removeClientSession($client_id);
             return;
@@ -276,6 +282,7 @@ class Events
         $now = time();
         $lastHeartbeat = (int)($session['last_heartbeat'] ?? $now);
         self::$clientSessions[$client_id]['last_heartbeat'] = $now;
+        UserDeviceSession::refreshLogin($deviceId, $openId, $token);
 
         if (!empty($session['track_time'])) {
             $seconds = max(0, min($now - $lastHeartbeat, HEARTBEAT_TIME));

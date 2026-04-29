@@ -14,6 +14,7 @@ use think\facade\Queue;
 use think\facade\Session;
 use app\cq\common\AliSms as sendSms;
 use app\service\GatewayPush as Worker;
+use app\service\UserDeviceSession;
 
 class User extends BaseController
 {
@@ -53,6 +54,7 @@ class User extends BaseController
         $clientIP = explode(',', $ip)[0] ?? '';
         // return json(['code'=>200,'msg'=>'获取成功','data'=>$clientIP]);
         $key = $this->request->param('key');
+        $deviceId = UserDeviceSession::extractDeviceIdFromRequest($this->request);
         $reg  =  Db::table('reg')->where('key',$key)->findOrEmpty();
         $open_id = $reg?$reg['open_id']:null;
         if(Request::header('host') == '192.168.177.129'){
@@ -79,6 +81,7 @@ class User extends BaseController
                 }
 
                 Db::table('ul_order_user')->where('open_id', $open_id)->update($updateData);
+                UserDeviceSession::syncLogin($deviceId, (string)$open_id, $token);
 
                 return json([
                     'code' => 200,
@@ -103,6 +106,7 @@ class User extends BaseController
                     // 使用 insertGetId 避免二次查询
                     $userId = Db::table('ul_order_user')->insertGetId($data);
                     $data['id'] = $userId;
+                    UserDeviceSession::syncLogin($deviceId, (string)$open_id, $token);
 
                     return json([
                         'code' => 200,
@@ -116,6 +120,7 @@ class User extends BaseController
                     if (strpos($e->getMessage(), 'Duplicate entry') !== false) {
                         // 重新获取已存在用户
                         $info = Db::table('ul_order_user')->where('open_id', $open_id)->find();
+                        UserDeviceSession::syncLogin($deviceId, (string)$open_id, $token);
                         return json([
                             'code' => 200,
                             'msg' => '用户信息',
@@ -336,6 +341,7 @@ class User extends BaseController
             $redirectUrl = $oauth->redirect($data_list['redirect_url']);
             return json($redirectUrl);
         }else{
+            $deviceId = UserDeviceSession::extractDeviceIdFromRequest($this->request);
             $user = $oauth->userFromCode($code);
             $data['open_id'] = $user->getId();
             $data['nickname'] = $user->getNickname();
@@ -344,6 +350,7 @@ class User extends BaseController
             $data['avatar2'] = $user->getAvatar();
             $token = md5($data['open_id'].time());
             cache('user_'.$data['open_id'], $token, 3600);
+            UserDeviceSession::syncLogin($deviceId, (string)$data['open_id'], $token);
             $list = Db::table('ul_order_user')->where('open_id',$data['open_id'])->find();
             if($list){
                 return json(['code'=>200,'msg'=>'用户信息','data'=>$list,'token'=>$token]);
